@@ -373,6 +373,81 @@ class SingleFrameSpriteTrap(pygame.sprite.Sprite):
                 self.rect.x += 3
                 self.rect.y -= 3
 
+class Bomb(pygame.sprite.Sprite):
+    def __init__(self, spawn_plat, game):
+        self._layer = TRAP_LAYER
+        self.groups = game.all_sprites, game.traps
+        super().__init__(self.groups)
+        self.game = game
+        self.time_since_the_game_ran = 0
+        self.run_once = True
+        self.bomb_touched = False
+        self.blow_the_bomb = False
+        self.last_update_time = 0
+        self.current_frame_index = 0
+        self.spawn_plat = spawn_plat
+        self._load_blow_list_images()
+        self.image = game.traps_sprite_sheet.get_image(260, 2454, 109, 151, 2, False) #y = 2094
+        self.rect = self.image.get_rect()
+        self.rect.centerx = self.spawn_plat.rect.centerx
+        self.rect.bottom = self.spawn_plat.rect.top
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def _load_blow_list_images(self):
+        self.blow_list = [self.game.traps_sprite_sheet.get_image(0, 3626, 340, 388, 1),
+                     self.game.traps_sprite_sheet.get_image(0, 3286, 340, 388, 1),
+                     self.game.traps_sprite_sheet.get_image(0, 3966, 340, 388, 1), 
+                     self.game.traps_sprite_sheet.get_image(0, 4646, 340, 388, 1),
+                     self.game.traps_sprite_sheet.get_image(0, 4306, 340, 388, 1),
+                     self.game.traps_sprite_sheet.get_image(0, 5326, 340, 388, 1),
+                     self.game.traps_sprite_sheet.get_image(0, 4986, 340, 388, 1)]
+
+    def _bomb_trigger_wait(self):
+        """This function gets starts counting 2 seconds with the 
+        bomb trigger on (red button sprite) and calls the animate 
+        function to blow the bomb """
+
+        if self.run_once:
+            self.time_since_the_game_ran = pygame.time.get_ticks()
+            self.run_once = False
+      
+        if not self.blow_the_bomb and self.bomb_touched:
+            self.image = self.game.traps_sprite_sheet.get_image(260, 2094, 109, 151, 2, False)
+
+        if self.time_since_the_game_ran:
+            time_since_touched_the_bomb = pygame.time.get_ticks() - self.time_since_the_game_ran #get the difference
+            if time_since_touched_the_bomb > 2000: #if 2 seconds has passed since Joe has touched the bomb, then boom
+                self.blow_the_bomb = True
+
+    def _animate(self):
+        self._bomb_trigger_wait()
+        time_now = pygame.time.get_ticks()
+        
+        if self.blow_the_bomb:
+            if time_now - self.last_update_time > 100:
+                self.last_update_time = time_now
+
+                last_image_bottom = self.rect.bottom
+                last_centerx = self.rect.centerx
+                self.current_frame_index = (self.current_frame_index + 1) % len(self.blow_list)
+                self.image = self.blow_list[self.current_frame_index]
+                self.rect = self.image.get_rect()
+                self.rect.bottom = last_image_bottom
+                self.rect.centerx = last_centerx
+
+        if self.current_frame_index == len(self.blow_list) - 1:
+            self.kill()
+
+    def update(self):
+        if (self.rect.left <= self.game.main_player.rect.right <= self.rect.right and
+            self.rect.bottom <= self.game.main_player.rect.bottom):
+            self.bomb_touched = True
+        
+        if self.bomb_touched:
+            self._animate()
+
+            
+
 """Enemies sprites"""
 class Snake(pygame.sprite.Sprite):
     def __init__(self, spawn_platform, game):

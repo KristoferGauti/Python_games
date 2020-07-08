@@ -126,7 +126,7 @@ def level_6(initial_platform, game):
 
 
 def level_7(initial_platform, game):
-    """New level copy paste from test level"""
+    """New level copy paste from test level snow and hidden bombs"""
     Platform(WIDTH + 5, 200, game) #A reminder platform to show where the width of the screen is 
                                                 #When to display the next level
 

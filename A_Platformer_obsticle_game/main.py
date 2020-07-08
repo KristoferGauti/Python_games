@@ -10,7 +10,7 @@
          Make a level system and add a sign on the end platform in level 1 for instruction board
          Add a coin system
          Add a shop for buying weapons and powerups like super jump, extra lives
-         Add a inventory
+         Add an inventory
 """
 
 
@@ -144,6 +144,9 @@ class Game():
         elif trap_hit_list[0].axe:
             self.game_over_text = "was cut by an axe to death"
             return True
+
+
+
 
     def _check_enemy_hit(self, enemy_list):
         for enemy in enemy_list:
@@ -365,11 +368,13 @@ class Game():
         self.main_player = MainCharacter(40, HEIGHT - 50, self)
         self.grass_platform = Platform(self.main_player.position.x - 40, BOTTOM_PLATFORM_Y_COORDINATE, self)
 
-        for i in range(5):
+        for i in range(5): #10
             snow = Platform(140 + (self.grass_platform.get_size() * i), 300, self, False, False, True) #Snow
 
         for k in range(6):
-            Platform(400 + (self.grass_platform.get_size() * k), HEIGHT / 2, self)
+            spawn_bomb_plat = Platform(snow.rect.x + 100 + (self.grass_platform.get_size() * k), HEIGHT / 2, self)
+
+        Bomb(spawn_bomb_plat, self)
 
         
         
@@ -382,9 +387,14 @@ class Game():
         if self.game_over_text != "fell":
             GraveStone(self.main_player.position.x - 100, self.main_player.position.y - 150, self)
 
+        
         for trap in self.traps:
-            if not trap.spike:
-                trap.kill()
+            try:
+                if not trap.spike:
+                    trap.kill()
+            except AttributeError:
+                pass
+            
 
         for fireball in self.fireballs:
             fireball.kill()
