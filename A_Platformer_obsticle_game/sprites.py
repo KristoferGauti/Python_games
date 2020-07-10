@@ -383,6 +383,7 @@ class Bomb(pygame.sprite.Sprite):
         self.run_once = True
         self.bomb_touched = False
         self.blow_the_bomb = False
+        self.is_blowing = False
         self.last_update_time = 0
         self.current_frame_index = 0
         self.spawn_plat = spawn_plat
@@ -394,18 +395,27 @@ class Bomb(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def _load_blow_list_images(self):
-        self.blow_list = [self.game.traps_sprite_sheet.get_image(0, 3626, 340, 388, 1),
-                     self.game.traps_sprite_sheet.get_image(0, 3286, 340, 388, 1),
-                     self.game.traps_sprite_sheet.get_image(0, 3966, 340, 388, 1), 
-                     self.game.traps_sprite_sheet.get_image(0, 4646, 340, 388, 1),
-                     self.game.traps_sprite_sheet.get_image(0, 4306, 340, 388, 1),
-                     self.game.traps_sprite_sheet.get_image(0, 5326, 340, 388, 1),
-                     self.game.traps_sprite_sheet.get_image(0, 4986, 340, 388, 1)]
+        self.blow_list = [self.game.traps_sprite_sheet.get_image(0, 3626, 340, 388, 1, False),
+                          self.game.traps_sprite_sheet.get_image(0, 3286, 340, 388, 1, False),
+                          self.game.traps_sprite_sheet.get_image(0, 3966, 340, 388, 1, False), 
+                          self.game.traps_sprite_sheet.get_image(0, 4646, 340, 388, 1, False),
+                          self.game.traps_sprite_sheet.get_image(0, 4306, 340, 388, 1, False),
+                          self.game.traps_sprite_sheet.get_image(0, 5326, 340, 388, 1, False),
+                          self.game.traps_sprite_sheet.get_image(0, 4986, 340, 388, 1, False)]
+
+    def mask_collision_using_overlap_and_offsets(self, obj1, obj2):
+        """pixel perfect collision using pygame.mask"""
+        
+        offset_x = obj2.rect.x - obj1.rect.x
+        offset_y = obj2.rect.y - obj1.rect.y
+
+        return obj1.mask.overlap(self.mask, (offset_x, offset_y))
+
 
     def _bomb_trigger_wait(self):
-        """This function gets starts counting 2 seconds with the 
-        bomb trigger on (red button sprite) and calls the animate 
-        function to blow the bomb """
+        """This function starts counting 2 seconds when the 
+        bomb trigger is on (red button sprite) and calls the animate 
+        function to blow the bomb when 2 seconds have passed"""
 
         if self.run_once:
             self.time_since_the_game_ran = pygame.time.get_ticks()
@@ -416,12 +426,13 @@ class Bomb(pygame.sprite.Sprite):
 
         if self.time_since_the_game_ran:
             time_since_touched_the_bomb = pygame.time.get_ticks() - self.time_since_the_game_ran #get the difference
-            if time_since_touched_the_bomb > 2000: #if 2 seconds has passed since Joe has touched the bomb, then boom
+            if time_since_touched_the_bomb > 2000: #if 1.4 or 1.6 or 1.7 seconds has passed since Joe has touched the bomb, then boom
                 self.blow_the_bomb = True
 
     def _animate(self):
         self._bomb_trigger_wait()
         time_now = pygame.time.get_ticks()
+        
         
         if self.blow_the_bomb:
             if time_now - self.last_update_time > 100:
@@ -431,20 +442,27 @@ class Bomb(pygame.sprite.Sprite):
                 last_centerx = self.rect.centerx
                 self.current_frame_index = (self.current_frame_index + 1) % len(self.blow_list)
                 self.image = self.blow_list[self.current_frame_index]
+                self.mask = pygame.mask.from_surface(self.image)
                 self.rect = self.image.get_rect()
                 self.rect.bottom = last_image_bottom
                 self.rect.centerx = last_centerx
 
+            #Returns the offset coordinates (x, y) if Joe collides with the bomb otherwise None
+            if self.mask_collision_using_overlap_and_offsets(self.game.main_player, self) != None:
+                self.game._game_over_functionality(self.game.ohh_sound, "expoded to death")
+
         if self.current_frame_index == len(self.blow_list) - 1:
             self.kill()
+            
 
     def update(self):
-        if (self.rect.left <= self.game.main_player.rect.right <= self.rect.right and
-            self.rect.bottom <= self.game.main_player.rect.bottom):
+        if self.mask_collision_using_overlap_and_offsets(self.game.main_player, self) != None:
             self.bomb_touched = True
         
         if self.bomb_touched:
             self._animate()
+
+       
 
             
 

@@ -123,27 +123,34 @@ class Game():
                 self.play_dead_sound = False
 
     def _check_trap_hit(self, trap_hit_list, hits_platform):
-        if trap_hit_list[0].spike:
-            try:
-                if hits_platform[0].rect.top and trap_hit_list[0].spike_go_up:
+        try:
+            if trap_hit_list[0].spike:
+                try:
+                    if hits_platform[0].rect.top and trap_hit_list[0].spike_go_up:
+                        self.game_over_text = "was stung to death"
+                        return True
+                    if (trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.bottom or
+                    trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.left or
+                    trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.right):
+                        return False
+
+                except IndexError:
                     self.game_over_text = "was stung to death"
                     return True
-                if (trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.bottom or
-                trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.left or
-                trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.right):
-                    return False
-
-            except IndexError:
-                self.game_over_text = "was stung to death"
+                
+            elif trap_hit_list[0].stone:
+                self.game_over_text = "was hit by a boulder and died"
                 return True
-            
-        elif trap_hit_list[0].stone:
-            self.game_over_text = "was hit by a boulder and died"
-            return True
 
-        elif trap_hit_list[0].axe:
-            self.game_over_text = "was cut by an axe to death"
-            return True
+            elif trap_hit_list[0].axe:
+                self.game_over_text = "was cut by an axe to death"
+                return True
+
+        except AttributeError:
+            pass
+            
+
+        
 
 
 
@@ -241,7 +248,7 @@ class Game():
                 self.dead = True
                 self._play_sound(self.ohh_sound)
                 self.game_over_screen()
-
+            
         #Gotten hit by the enemies
         if enemy_hit:
             if self._check_enemy_hit(enemy_hit):
@@ -305,7 +312,7 @@ class Game():
         #Function for traps collision, pass in hits_platform list which has a collsion 
         #detection between the player and the platforms
         """Uncomment the line below to enable traps collision with the player"""
-        #self.game_over_collision(hits_platform) 
+        self.game_over_collision(hits_platform) 
 
         #Don't let Joe go off the left side of the screen
         if self.main_player.position.x <= 0:
@@ -372,7 +379,9 @@ class Game():
             snow = Platform(140 + (self.grass_platform.get_size() * i), 300, self, False, False, True) #Snow
 
         for k in range(6):
-            spawn_bomb_plat = Platform(snow.rect.x + 100 + (self.grass_platform.get_size() * k), HEIGHT / 2, self)
+            if k == 3:
+                spawn_bomb_plat = Platform(snow.rect.x + 100 + (self.grass_platform.get_size() * k), HEIGHT / 2, self)
+            Platform(snow.rect.x + 100 + (self.grass_platform.get_size() * k), HEIGHT / 2, self)
 
         Bomb(spawn_bomb_plat, self)
 
