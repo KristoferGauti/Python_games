@@ -91,18 +91,17 @@ def level_5(initial_platform, game):
     Platform(plat.rect.x - initial_platform.get_size(), plat.rect.y, game)
         
     for j in range(1, 18):
-        spew_fire = False
-        if j % 3 == 0:
-            spew_fire = True
+        if j == 1 or j == 2 or j == 4 or j == 8 or j == 12 or j == 16:
+            spew_fire = False 
         else:
-            spew_fire = False
+            spew_fire = True
 
         lava = Lava(plat.rect.x + (initial_platform.get_size() * j), plat.rect.y - 5, game, spew_fire)
         Platform(lava.rect.x, lava.rect.y + initial_platform.get_size(False), game)
-        Platform(lava.rect.x, lava.rect.y + 2*initial_platform.get_size(False), game, False) #Concrete platform
+        Platform(lava.rect.x, lava.rect.y + 2*initial_platform.get_size(False), game, False, True) #Concrete platform
 
-        if j % 3 == 0:
-            Platform(lava.rect.x + 25, lava.rect.y - 2*initial_platform.get_size(False), game)
+        if j % 4 == 0:
+            Platform(lava.rect.x - 20, lava.rect.y - 2*initial_platform.get_size(False), game) #jump platforms
 
     first_stair_plat = Platform(lava.rect.x + initial_platform.get_size(False), plat.rect.y + 2, game)
     for k in range(4):
@@ -113,7 +112,7 @@ def level_6(initial_platform, game):
     """Swordchopper level"""
     for i in range(4):
         Platform(WIDTH + 150 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
-        high_mob_plat = Platform(WIDTH + 750 + (initial_platform.get_size() * i), -600, game)
+        high_mob_plat = Platform(WIDTH + 760 + (initial_platform.get_size() * i), -600, game)
         Platform(WIDTH + 450 + (initial_platform.get_size() * i), HEIGHT / 2, game)
         mob_plat = Platform(WIDTH + WIDTH * 3/4 - 120 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
         plat_length = 4 * initial_platform.get_size()
@@ -121,14 +120,31 @@ def level_6(initial_platform, game):
     for i in range(1, 3):
         Platform(WIDTH + 300 + (initial_platform.get_size() * i), HEIGHT / 2 + 100, game)
 
-    SwordChopper(high_mob_plat, plat_length, 2, game) #Swordchopper that falls of the platforms
+    SwordChopper(high_mob_plat, plat_length, 2.5, game) #Swordchopper that falls of the platforms
     SwordChopper(mob_plat, plat_length, 2, game, False, 1.5) #Swordchopper that stays on the platforms
 
 
 def level_7(initial_platform, game):
+    for i in range(6):
+        if i == 3:
+            bomb_plat = Platform(WIDTH + 140 + (initial_platform.get_size() * i), 300, game)
+        grass_plat = Platform(WIDTH + 140 + (initial_platform.get_size() * i), 300, game) 
+
+
+    for k in range(8): #10
+        if k == 3:
+            spawn_bomb_plat_snow = Platform(grass_plat.rect.x + 100 + (initial_platform.get_size() * k), HEIGHT / 2, game, False, False, True) #Snow platform
+        Platform(grass_plat.rect.x + 100 + (initial_platform.get_size() * k), HEIGHT / 2, game, False, False, True) #Snow platform
+
+    Bomb(bomb_plat, game)
+    Bomb(spawn_bomb_plat_snow, game)
+    
+
+def level_8(initial_platform, game):
     """New level copy paste from test level snow and hidden bombs"""
     Platform(WIDTH + 5, 200, game) #A reminder platform to show where the width of the screen is 
                                                 #When to display the next level
+    SingleFrameSpriteTrap(WIDTH + 80, -80, game, True, False, False, True)
 
 
 

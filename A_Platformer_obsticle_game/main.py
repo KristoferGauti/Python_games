@@ -49,7 +49,7 @@ class Game():
         self.enemies = pygame.sprite.Group() 
         self._load_data()
         self.level_index = 0
-        self.levels = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7]
+        self.levels = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
   
     def _load_data(self):
         self.main_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "enemies_maincharacter_spritesheet.png"))
@@ -148,27 +148,6 @@ class Game():
 
         except AttributeError:
             pass
-            
-
-        
-
-
-
-
-    def _check_enemy_hit(self, enemy_list):
-        for enemy in enemy_list:
-            if enemy.type == "snake":
-                self.game_over_text = "was eaten by snakes"
-                return True
-            if enemy.type == "sword chopper":
-                self.game_over_text = "was chopped with a deadly sword to death"
-                return True
-                
-    def _game_over_functionality(self, sound_when_dead, gameover_text_str):
-        self._play_sound(sound_when_dead)
-        self.dead = True
-        self.game_over_text = gameover_text_str
-        self.game_over_screen()
 
     def move_main_player_camera(self):
         """Move the camera's focuspoint further to the right"""
@@ -231,7 +210,32 @@ class Game():
             self.main_player.velocity.y = 0
             self.main_player.jumping = False
 
+    def _check_enemy_hit(self, enemy_list):
+        """Checks which enemy was hit and sets the display 
+        text corresponding to the enemy type"""
+
+        for enemy in enemy_list:
+            if enemy.type == "snake":
+                self.game_over_text = "was eaten by snakes"
+                return True
+            if enemy.type == "sword chopper":
+                self.game_over_text = "was chopped with a deadly sword to death"
+                return True
+                
+    def _game_over_functionality(self, sound_when_dead, gameover_text_str):
+        """Sets the game over functionality and 
+        calls the game over screen"""
+
+        self._play_sound(sound_when_dead)
+        self.dead = True
+        self.game_over_text = gameover_text_str
+        self.game_over_screen()
+
     def game_over_collision(self, hits_platform):
+        """checks what object killed Joe with pygame mask collision 
+        (pixel perfect collision) and calls the game over functionality 
+        function to display the game over screen"""
+
         #Obsticle hit lists (mask collision -> pixel perfect collision)
         lava_hits = pygame.sprite.spritecollide(self.main_player, self.lavas, False, pygame.sprite.collide_mask)
         fireball_hits = pygame.sprite.spritecollide(self.main_player, self.fireballs, False, pygame.sprite.collide_mask)
@@ -269,7 +273,8 @@ class Game():
         if self.main_player.velocity.y > 0: #going down due to gravity
             if hits_platform:
                 if hits_platform[0].snow:
-                    self.main_player.friction = -0.2 #Let Joe walk slower in the snow
+                    self.main_player.jump_power = PLAYER_JUMP - 2 #let him jump higher to make it fair when jumping over axes
+                    self.main_player.friction = -0.177 #Let Joe walk slower in the snow
                     the_snow_spot = hits_platform[0].rect.top + hits_platform[0].get_size(False) // 2
                 
                     if self.main_player.position.y > hits_platform[0].rect.top:
@@ -311,8 +316,8 @@ class Game():
 
         #Function for traps collision, pass in hits_platform list which has a collsion 
         #detection between the player and the platforms
-        """Uncomment the line below to enable traps collision with the player"""
-        self.game_over_collision(hits_platform) 
+        """Uncomment these two lines below to enable traps collision with the player"""
+        #self.game_over_collision(hits_platform)
 
         #Don't let Joe go off the left side of the screen
         if self.main_player.position.x <= 0:
@@ -375,17 +380,20 @@ class Game():
         self.main_player = MainCharacter(40, HEIGHT - 50, self)
         self.grass_platform = Platform(self.main_player.position.x - 40, BOTTOM_PLATFORM_Y_COORDINATE, self)
 
-        for i in range(5): #10
+        for i in range(8): #10
+            if i == 4:
+                bomb_plat = Platform(140 + (self.grass_platform.get_size() * i), 300, self, False, False, True) #Snow
             snow = Platform(140 + (self.grass_platform.get_size() * i), 300, self, False, False, True) #Snow
+
 
         for k in range(6):
             if k == 3:
                 spawn_bomb_plat = Platform(snow.rect.x + 100 + (self.grass_platform.get_size() * k), HEIGHT / 2, self)
             Platform(snow.rect.x + 100 + (self.grass_platform.get_size() * k), HEIGHT / 2, self)
 
+        Bomb(bomb_plat, self)
         Bomb(spawn_bomb_plat, self)
 
-        
         
     def boss_level(self):
         pass
@@ -396,15 +404,13 @@ class Game():
         if self.game_over_text != "fell":
             GraveStone(self.main_player.position.x - 100, self.main_player.position.y - 150, self)
 
-        
         for trap in self.traps:
             try:
-                if not trap.spike:
+                if not trap.spike: #kill every trap except the spike traps
                     trap.kill()
-            except AttributeError:
+            except AttributeError: #It is an Attribute error because Bomb object does not have a spike attribute
                 pass
             
-
         for fireball in self.fireballs:
             fireball.kill()
 
@@ -414,8 +420,8 @@ def main():
     obsticle_game = Game()
 
     while obsticle_game.running:
-        obsticle_game.test_level()
-        #obsticle_game.opening_level_part1()
+        #obsticle_game.test_level()
+        obsticle_game.opening_level_part1()
         obsticle_game.run()
 
 main()

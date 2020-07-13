@@ -39,6 +39,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.velocity = vector(0, 0)
         self.acceleration = vector(0, 0)
         self.friction = -0.09 
+        self.jump_power = PLAYER_JUMP
         self.mask = pygame.mask.from_surface(self.image)
 
     def _load_images(self):
@@ -130,10 +131,10 @@ class MainCharacter(pygame.sprite.Sprite):
         self.rect.x -= 10
         if hits and not self.jumping:
             self.jumping = True
-            self.velocity.y += PLAYER_JUMP
+            self.velocity.y += self.jump_power
 
     def cut_jump(self):
-        mini_jump = PLAYER_JUMP // 4
+        mini_jump = self.jump_power // 4
 
         if self.jumping:
             if self.velocity.y < mini_jump:
@@ -284,8 +285,8 @@ class SingleFrameSpriteTrap(pygame.sprite.Sprite):
         self.spike = spike
         self.stone = stone
         self.axe = axe
+        self.run_once = True
         if self.spike:
-            self.run_once = True
             self.spike_go_up = True
             self.spike_go_down = False 
             self.image = game.traps_sprite_sheet.get_image(260, 1486, 160, 164, 4, False)
@@ -369,9 +370,15 @@ class SingleFrameSpriteTrap(pygame.sprite.Sprite):
             self.rect.y += 3
             
             if hits:
-                self.image = self.stop_axe_image_list[self.random_num]
-                self.rect.x += 3
-                self.rect.y -= 3
+                for plat in self.game.platforms:
+                    if plat.snow:
+                        if self.run_once:
+                            self.rect.y += plat.get_size(False) // 2
+                            self.run_once = False
+                else:
+                    self.image = self.stop_axe_image_list[self.random_num]
+                    self.rect.x += 3
+                    self.rect.y -= 3
 
 class Bomb(pygame.sprite.Sprite):
     def __init__(self, spawn_plat, game):
@@ -391,7 +398,7 @@ class Bomb(pygame.sprite.Sprite):
         self.image = game.traps_sprite_sheet.get_image(260, 2454, 109, 151, 2, False) #y = 2094
         self.rect = self.image.get_rect()
         self.rect.centerx = self.spawn_plat.rect.centerx
-        self.rect.bottom = self.spawn_plat.rect.top
+        self.rect.bottom = self.spawn_plat.rect.top if self.spawn_plat.grass or self.spawn_plat.concrete else self.spawn_plat.rect.centery
         self.mask = pygame.mask.from_surface(self.image)
 
     def _load_blow_list_images(self):
@@ -404,7 +411,7 @@ class Bomb(pygame.sprite.Sprite):
                           self.game.traps_sprite_sheet.get_image(0, 4986, 340, 388, 1, False)]
 
     def mask_collision_using_overlap_and_offsets(self, obj1, obj2):
-        """pixel perfect collision using pygame.mask"""
+        """pixel perfect collision using pygame.mask better explaining later"""
         
         offset_x = obj2.rect.x - obj1.rect.x
         offset_y = obj2.rect.y - obj1.rect.y
@@ -442,14 +449,15 @@ class Bomb(pygame.sprite.Sprite):
                 last_centerx = self.rect.centerx
                 self.current_frame_index = (self.current_frame_index + 1) % len(self.blow_list)
                 self.image = self.blow_list[self.current_frame_index]
-                self.mask = pygame.mask.from_surface(self.image)
+                self.mask = pygame.mask.from_surface(self.image) #new mask
                 self.rect = self.image.get_rect()
                 self.rect.bottom = last_image_bottom
                 self.rect.centerx = last_centerx
 
             #Returns the offset coordinates (x, y) if Joe collides with the bomb otherwise None
             if self.mask_collision_using_overlap_and_offsets(self.game.main_player, self) != None:
-                self.game._game_over_functionality(self.game.ohh_sound, "expoded to death")
+                if not self.game.dead:
+                    self.game._game_over_functionality(self.game.ohh_sound, "exploded to death")
 
         if self.current_frame_index == len(self.blow_list) - 1:
             self.kill()
@@ -505,7 +513,7 @@ class Snake(pygame.sprite.Sprite):
 
     def _check_if_random_chooses_one_twice_in_a_row(self):
         """This algorithm checks if self.random_num chooses 1 twice in a row 
-        If so the pop the second 1 in self.random_num_list and append 2 so
+        If so the pop the second chosen 1 in self.random_num_list and append 2 so
         that the snake does not bite twice in a row (the snake bites when self.random_num = 1)"""
 
         if len(self.random_num_list) > 1:
@@ -619,7 +627,6 @@ class SwordChopper(pygame.sprite.Sprite):
 
     def update(self):
         self._animate()
-        #print(self.acceleration)
 
         if self.fell_off_platforms:
             #Constant x velocity but changing y velocity due to gravity

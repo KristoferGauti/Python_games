@@ -24,10 +24,10 @@ TITLE_LAYER = 2
 PIXEL_SIGN_LAYER = 3
 ENEMY_LAYER = 2
 
-#Main character's and enemie's properties
+#Main character's and enemy's properties
 GRAVITY = 0.8
 SNOW_GRAVITY = 0.0849320
-ACCELERATION = 0.345 #0.4
+ACCELERATION = 0.345 
 PLAYER_JUMP = -18
 
 #Colors
@@ -43,6 +43,6 @@ LAVA_BALL_FRICTION = -0.09
 #Additional constants
 PLAY_BTN_WIDTH = 200
 PLAY_BTN_HEIGHT = 70
-CAMERA_FOCUSPOINT_X_POS = 230 #Can change to 130 otherwise not
+CAMERA_FOCUSPOINT_X_POS = 230 #Can change to 130 otherwise do not change this constant
 BOTTOM_PLATFORM_Y_COORDINATE = HEIGHT - 40
 
