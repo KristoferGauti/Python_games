@@ -125,14 +125,15 @@ def level_6(initial_platform, game):
 
 
 def level_7(initial_platform, game):
+    """level 7 snow and hidden bombs"""
     for i in range(6):
         if i == 3:
-            bomb_plat = Platform(WIDTH + 140 + (initial_platform.get_size() * i), 300, game)
-        grass_plat = Platform(WIDTH + 140 + (initial_platform.get_size() * i), 300, game) 
+            bomb_plat = Platform(WIDTH + 110 + (initial_platform.get_size() * i), 300, game)
+        grass_plat = Platform(WIDTH + 110 + (initial_platform.get_size() * i), 300, game) 
 
 
-    for k in range(8): #10
-        if k == 3:
+    for k in range(10): #10
+        if k == 2:
             spawn_bomb_plat_snow = Platform(grass_plat.rect.x + 100 + (initial_platform.get_size() * k), HEIGHT / 2, game, False, False, True) #Snow platform
         Platform(grass_plat.rect.x + 100 + (initial_platform.get_size() * k), HEIGHT / 2, game, False, False, True) #Snow platform
 
@@ -141,10 +142,24 @@ def level_7(initial_platform, game):
     
 
 def level_8(initial_platform, game):
-    """New level copy paste from test level snow and hidden bombs"""
+    SingleFrameSpriteTrap(WIDTH + 500, -500, game, True, False, False, True) #An axe for level_7 (hidden snow axe)
+
+    """Level 8 starts here"""
+    for i in range(10):
+        if i == 7:
+            bomb_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), HEIGHT - 50, game, False, False, True)
+        last_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), HEIGHT - 50, game, False, False, True)
+
+    for j in range(8):
+        Platform(last_plat.rect.x, last_plat.rect.y - (initial_platform.get_size(False) * j), game, False, True)
+
+    Bomb(bomb_plat, game, 2)
+
+
+
+def level_9(initial_platform, game):
     Platform(WIDTH + 5, 200, game) #A reminder platform to show where the width of the screen is 
                                                 #When to display the next level
-    SingleFrameSpriteTrap(WIDTH + 80, -80, game, True, False, False, True)
 
 
 

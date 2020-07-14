@@ -368,20 +368,19 @@ class SingleFrameSpriteTrap(pygame.sprite.Sprite):
             
         if self.axe:
             self.rect.y += 3
-            
+
             if hits:
-                for plat in self.game.platforms:
-                    if plat.snow:
-                        if self.run_once:
-                            self.rect.y += plat.get_size(False) // 2
-                            self.run_once = False
-                else:
-                    self.image = self.stop_axe_image_list[self.random_num]
-                    self.rect.x += 3
-                    self.rect.y -= 3
+                self.rect.y -= 3
+                self.rect.x += 3
+                if hits[0].snow:
+                    if self.run_once:
+                        self.rect.y += hits[0].get_size(False) // 2
+                        self.run_once = False
+                
+                self.image = self.stop_axe_image_list[self.random_num]
 
 class Bomb(pygame.sprite.Sprite):
-    def __init__(self, spawn_plat, game):
+    def __init__(self, spawn_plat, game, scale_down_explosion_sprites_num=1):
         self._layer = TRAP_LAYER
         self.groups = game.all_sprites, game.traps
         super().__init__(self.groups)
@@ -391,6 +390,7 @@ class Bomb(pygame.sprite.Sprite):
         self.bomb_touched = False
         self.blow_the_bomb = False
         self.is_blowing = False
+        self.scale_down_num = scale_down_explosion_sprites_num
         self.last_update_time = 0
         self.current_frame_index = 0
         self.spawn_plat = spawn_plat
@@ -402,13 +402,13 @@ class Bomb(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def _load_blow_list_images(self):
-        self.blow_list = [self.game.traps_sprite_sheet.get_image(0, 3626, 340, 388, 1, False),
-                          self.game.traps_sprite_sheet.get_image(0, 3286, 340, 388, 1, False),
-                          self.game.traps_sprite_sheet.get_image(0, 3966, 340, 388, 1, False), 
-                          self.game.traps_sprite_sheet.get_image(0, 4646, 340, 388, 1, False),
-                          self.game.traps_sprite_sheet.get_image(0, 4306, 340, 388, 1, False),
-                          self.game.traps_sprite_sheet.get_image(0, 5326, 340, 388, 1, False),
-                          self.game.traps_sprite_sheet.get_image(0, 4986, 340, 388, 1, False)]
+        self.blow_list = [self.game.traps_sprite_sheet.get_image(0, 3626, 340, 388, self.scale_down_num, False),
+                          self.game.traps_sprite_sheet.get_image(0, 3286, 340, 388, self.scale_down_num, False),
+                          self.game.traps_sprite_sheet.get_image(0, 3966, 340, 388, self.scale_down_num, False), 
+                          self.game.traps_sprite_sheet.get_image(0, 4646, 340, 388, self.scale_down_num, False),
+                          self.game.traps_sprite_sheet.get_image(0, 4306, 340, 388, self.scale_down_num, False),
+                          self.game.traps_sprite_sheet.get_image(0, 5326, 340, 388, self.scale_down_num, False),
+                          self.game.traps_sprite_sheet.get_image(0, 4986, 340, 388, self.scale_down_num, False)]
 
     def mask_collision_using_overlap_and_offsets(self, obj1, obj2):
         """pixel perfect collision using pygame.mask better explaining later"""
@@ -461,14 +461,25 @@ class Bomb(pygame.sprite.Sprite):
 
         if self.current_frame_index == len(self.blow_list) - 1:
             self.kill()
-            
+                 
 
     def update(self):
         if self.mask_collision_using_overlap_and_offsets(self.game.main_player, self) != None:
             self.bomb_touched = True
-        
+
         if self.bomb_touched:
             self._animate()
+            
+
+        plat_hits = pygame.sprite.spritecollide(self, self.game.platforms, False, pygame.sprite.collide_mask)
+        for plat in plat_hits:
+            if plat.concrete:
+                plat.kill() 
+
+         
+
+
+
 
        
 

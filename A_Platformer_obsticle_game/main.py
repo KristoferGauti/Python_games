@@ -6,13 +6,13 @@
 """The traps are from https://opengameart.org/content/animated-traps-and-obstacles"""
 
 """TODO: Camera system - Done
-         code the enemies and the minotaur boss - almost there
-         Make a level system and add a sign on the end platform in level 1 for instruction board
-         Add a coin system
-         Add a shop for buying weapons and powerups like super jump, extra lives
-         Add an inventory
+         code snow levels
+         code concrete levels
+         code a castille enterance with the cannon and axe cannon
+         in the castille is the boss level (minotour level)
+         code backgrounds and visuals (snow falling down in the snow level and more)
+         Implement a death counter
 """
-
 
 import pygame
 import random
@@ -49,7 +49,7 @@ class Game():
         self.enemies = pygame.sprite.Group() 
         self._load_data()
         self.level_index = 0
-        self.levels = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
+        self.levels = [level_7, level_8, level_9, opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
   
     def _load_data(self):
         self.main_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "enemies_maincharacter_spritesheet.png"))
@@ -202,11 +202,11 @@ class Game():
 
             self.draw_level = False
 
-    def _adjust_player_platform_position(self, the_position):
+    def _adjust_player_platform_y_position(self, the_y_position):
         """This function adjusts the main_player's y position when 
         he jumps on a platform"""
-        if self.main_player.position.y >= the_position:
-            self.main_player.position.y = the_position
+        if self.main_player.position.y >= the_y_position:
+            self.main_player.position.y = the_y_position
             self.main_player.velocity.y = 0
             self.main_player.jumping = False
 
@@ -265,28 +265,34 @@ class Game():
         """Update function which updates every sprites,
         checks for a sprite collision and moves the camera.
         Put in helper functions later"""
-
+      
         self.all_sprites.update()
         
         #Collision (rect collision) with the platform and stop the main_player if he hits the top of the plaform
         hits_platform = pygame.sprite.spritecollide(self.main_player, self.platforms, False) #List of platforms that Joe collided with
         if self.main_player.velocity.y > 0: #going down due to gravity
             if hits_platform:
-                if hits_platform[0].snow:
-                    self.main_player.jump_power = PLAYER_JUMP - 2 #let him jump higher to make it fair when jumping over axes
-                    self.main_player.friction = -0.177 #Let Joe walk slower in the snow
-                    the_snow_spot = hits_platform[0].rect.top + hits_platform[0].get_size(False) // 2
-                
-                    if self.main_player.position.y > hits_platform[0].rect.top:
-                        if self.main_player.jumping:
-                            self.main_player.velocity.y *= SNOW_GRAVITY #Let Joe drown in the snow slowly
+                for plat in hits_platform:
+                    if plat.snow:
+                        self.main_player.jump_power = PLAYER_JUMP - 2 #let him jump higher to make it fair when jumping over axes
+                        self.main_player.friction = -0.177 #Let Joe walk slower in the snow
+                        the_snow_spot = hits_platform[0].rect.top + hits_platform[0].get_size(False) // 2 #let Joe sink down in to the snow
+                    
+                        if self.main_player.position.y > hits_platform[0].rect.top:
+                            if self.main_player.jumping:
+                                self.main_player.velocity.y *= SNOW_GRAVITY #Let Joe drown in the snow slowly
 
-                        self._adjust_player_platform_position(the_snow_spot) #Until he reaches the_snow_spot
-                else:
-                    self.main_player.on_snow_plat = False
-                    self.main_player.friction = -0.09   
-
-                    self._adjust_player_platform_position(hits_platform[0].rect.top)
+                            self._adjust_player_platform_y_position(the_snow_spot) #Adjust Joe's y position until he reaches the_snow_spot
+                    
+                    elif plat.concrete:  #Need to fix the main_players walking foward when the concrete plats are removed!!!!!!
+                        if (self.main_player.rect.right >= plat.rect.left and len(hits_platform) > 2 or
+                            self.main_player.rect.right >= plat.rect.left and self.main_player.jumping):
+                            self.main_player.position.x -= 2
+                        else:
+                            self._adjust_player_platform_y_position(plat.rect.top)
+                    else:
+                        self.main_player.friction = -0.09   
+                        self._adjust_player_platform_y_position(plat.rect.top)
     
         #blit the viewing perspective from Joe when he is reading on the sign (key input = (r))
         if self.display_bigger_sign:
@@ -323,7 +329,6 @@ class Game():
         if self.main_player.position.x <= 0:
             self.main_player.position.x = 20
 
-        """Uncomment the line below when done designing the level in test_level"""
         self.move_main_player_camera() 
         self.change_level()
      
