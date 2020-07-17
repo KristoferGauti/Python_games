@@ -150,7 +150,8 @@ def level_8(initial_platform, game):
             bomb_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), HEIGHT - 50, game, False, False, True)
         last_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), HEIGHT - 50, game, False, False, True)
 
-    for j in range(8):
+    #Do not forget to put (1, some range) otherwise a concrete plat will spawn inside the grass platform and will block Joe from walking forward
+    for j in range(1, 8): 
         Platform(last_plat.rect.x, last_plat.rect.y - (initial_platform.get_size(False) * j), game, False, True)
 
     Bomb(bomb_plat, game, 2)

@@ -144,14 +144,18 @@ class MainCharacter(pygame.sprite.Sprite):
         return self.image.get_height()
 
 class Platform(pygame.sprite.Sprite):
-    def __init__(self, x, y, game, grass=True, concrete=False, snow=False):
+    def __init__(self, x, y, game, grass=True, concrete=False, snow=False, transparent_plat=False):
         self._layer = PLATFORM_LAYER if not snow else SNOW_LAYER
         self.groups = game.all_sprites, game.platforms
         super().__init__(self.groups)
         self.game = game
         self.grass = grass
         self.concrete = concrete
+        self.transparent_plat = transparent_plat #for the transparent castle where the boss_level starts
         self.snow = snow
+        self.run_once = True
+        self.concrete_plat_blown_up = False
+        self.concrete_plat_qty = 0
         if self.grass:
             self.image = self.game.main_sprite_sheet.get_image(128, 0, 128, 128, 3, False)
         elif self.concrete:
@@ -167,6 +171,25 @@ class Platform(pygame.sprite.Sprite):
             return self.image.get_width()
         else:
             return self.image.get_height()
+        
+    def update(self):
+        concrete_platforms_qty_now = 0
+        for plat in self.game.platforms:
+            if plat.concrete:
+                concrete_platforms_qty_now += 1
+
+        if self.run_once:
+            for plat in self.game.platforms:
+                if plat.concrete:
+                    self.concrete_plat_qty += 1
+            self.run_once = False 
+
+        if concrete_platforms_qty_now < self.concrete_plat_qty:
+            self.concrete_plat_blown_up = True
+
+  
+
+        
 
 class FireBall(pygame.sprite.Sprite):
     def __init__(self, x, y, game):
@@ -474,7 +497,7 @@ class Bomb(pygame.sprite.Sprite):
         plat_hits = pygame.sprite.spritecollide(self, self.game.platforms, False, pygame.sprite.collide_mask)
         for plat in plat_hits:
             if plat.concrete:
-                plat.kill() 
+                plat.kill()
 
          
 

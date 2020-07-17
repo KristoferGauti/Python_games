@@ -27,7 +27,8 @@ class Game():
     def __init__(self):
         self.running = True
         self.playing = True
-        self.run_once = True
+        self.run_once_sign = True
+        self.run_once_concrete_drop = True
         self.main_player_can_move = True
         self.draw_level = True
         self.reset_camera = False
@@ -80,7 +81,7 @@ class Game():
 
                 if event.key == pygame.K_r: #key check for reading the opening level sign
                     self.main_player.velocity.x = 0
-                    self.run_once = True
+                    self.run_once_sign = True
                     if self.display_key_input_instructions:
                         self.main_player_can_move = False
                         self.display_bigger_sign = True
@@ -283,22 +284,22 @@ class Game():
                                 self.main_player.velocity.y *= SNOW_GRAVITY #Let Joe drown in the snow slowly
 
                             self._adjust_player_platform_y_position(the_snow_spot) #Adjust Joe's y position until he reaches the_snow_spot
-                    
-                    elif plat.concrete:  #Need to fix the main_players walking foward when the concrete plats are removed!!!!!!
-                        if (self.main_player.rect.right >= plat.rect.left and len(hits_platform) > 2 or
-                            self.main_player.rect.right >= plat.rect.left and self.main_player.jumping):
-                            self.main_player.position.x -= 2
-                        else:
-                            self._adjust_player_platform_y_position(plat.rect.top)
+                    elif plat.concrete:
+                        if not plat.transparent_plat: #transparent_plat=False then joe cant walk past the concrete platforms
+                            if (self.main_player.rect.right >= plat.rect.left and len(hits_platform) > 2 or
+                                self.main_player.rect.right >= plat.rect.left and self.main_player.jumping):
+                                self.main_player.position.x -= 2
+                            else:
+                                self._adjust_player_platform_y_position(plat.rect.top)
                     else:
                         self.main_player.friction = -0.09   
                         self._adjust_player_platform_y_position(plat.rect.top)
     
         #blit the viewing perspective from Joe when he is reading on the sign (key input = (r))
         if self.display_bigger_sign:
-            if self.run_once:
+            if self.run_once_sign:
                 Sign(WIDTH / 2, HEIGHT * 3/4 - 10, 20, self)
-                self.run_once = False
+                self.run_once_sign = False
         else:
             for sign in self.sign:
                 if sign.type == "big":
