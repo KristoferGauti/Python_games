@@ -666,6 +666,7 @@ class SwordChopper(pygame.sprite.Sprite):
             #Constant x velocity but changing y velocity due to gravity
             self.acceleration = vector(-self.acceleration_x_speed, GRAVITY)
         else:
+            #check if the chopper has reached the initial_platform which is the end platform, if so change the direction
             if self.position.x <= self.initial_x_position - self.length_of_platforms:
                 self.acceleration = vector(self.acceleration_x_speed, GRAVITY)
             elif self.position.x >= self.initial_x_position:
@@ -681,6 +682,9 @@ class SwordChopper(pygame.sprite.Sprite):
         if platform_hit:
             self.position.y = platform_hit[0].rect.top
             self.velocity.y = 0
+            for plat in platform_hit:
+                if plat.concrete:
+                    self.position.x, self.position.y = plat.rect.x, plat.rect.y
             
 
 

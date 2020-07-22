@@ -50,7 +50,7 @@ class Game():
         self.enemies = pygame.sprite.Group() 
         self._load_data()
         self.level_index = 0
-        self.levels = [level_7, level_8, level_9, opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
+        self.levels = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8, level_9, level_10, level_11]
   
     def _load_data(self):
         self.main_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "enemies_maincharacter_spritesheet.png"))
