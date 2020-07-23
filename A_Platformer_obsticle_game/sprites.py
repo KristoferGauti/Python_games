@@ -188,9 +188,6 @@ class Platform(pygame.sprite.Sprite):
             self.concrete_plat_blown_up = True
 
   
-
-        
-
 class FireBall(pygame.sprite.Sprite):
     def __init__(self, x, y, game):
         self._layer = FIREBALL_LAYER
@@ -493,20 +490,10 @@ class Bomb(pygame.sprite.Sprite):
         if self.bomb_touched:
             self._animate()
             
-
         plat_hits = pygame.sprite.spritecollide(self, self.game.platforms, False, pygame.sprite.collide_mask)
         for plat in plat_hits:
             if plat.concrete:
                 plat.kill()
-
-         
-
-
-
-
-       
-
-            
 
 """Enemies sprites"""
 class Snake(pygame.sprite.Sprite):
@@ -687,14 +674,6 @@ class SwordChopper(pygame.sprite.Sprite):
                     self.position.x, self.position.y = plat.rect.x, plat.rect.y
             
 
-
-
-
-
-
-
-        
-
 """One frame sprites"""
 class GameTitle(pygame.sprite.Sprite):
     def __init__(self, x, y, game):
@@ -734,6 +713,7 @@ class GraveStone(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
 
 
         

@@ -185,13 +185,30 @@ def level_10(initial_platform, game):
     for i in range(4):
         Platform(WIDTH - 10 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
 
-    for i in range(4):
+    for i in range(5):
         Platform(WIDTH + 200 + (initial_platform.get_size() * i), HEIGHT - 100, game, False, False, True)
-        Platform(WIDTH + 400 + (initial_platform.get_size() * i), HEIGHT - 150, game, False, False, True)
-        Platform(WIDTH + 600 + (initial_platform.get_size() * i), HEIGHT - 200, game, False, False, True)
+        mid_plat = Platform(WIDTH + 450 + (initial_platform.get_size() * i), HEIGHT - 150, game, False, False, True)
+        plat = Platform(WIDTH + 700 + (initial_platform.get_size() * i), HEIGHT - 200, game, False, False, True)
+        if i == 2: 
+            Bomb(plat, game, 1)
+        if i == 3 or i == 4:
+            for up in range(1,7):
+                Platform(plat.rect.x, plat.rect.y - (initial_platform.get_size() * up), game, False, True)
 
+    SwordChopper(mid_plat, initial_platform.get_size() * 5, 2, game, False)
 
 def level_11(initial_platform, game):
+    for down in range(8):
+        last_plat = Platform(WIDTH + 90 + (initial_platform.get_size() * down), 300 + (initial_platform.get_size(False) / 2 * down), game)
+
+    for x in range(10):
+        Platform(last_plat.rect.x + (initial_platform.get_size() * x), last_plat.rect.y, game)
+
+def level_12(initial_platform, game):
+    """Castle gate level (need assets for a 
+    castle gate, tresure chest, trigger(kill the minotaur), 
+    cannon for the axe and the boulder"""
+    
     Platform(WIDTH + 5, 200, game) #A reminder platform to show where the width of the screen is 
                                                 #When to display the next level
 

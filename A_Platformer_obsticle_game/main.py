@@ -6,12 +6,11 @@
 """The traps are from https://opengameart.org/content/animated-traps-and-obstacles"""
 
 """TODO: Camera system - Done
-         code snow levels
-         code concrete levels
-         code a castille enterance with the cannon and axe cannon
-         in the castille is the boss level (minotour level)
+         code snow levels - Done
+         Implement a death counter - Done
+         code a castle enterance with the cannon and axe cannon - Doing
+         in the castle is the boss level (minotour level)
          code backgrounds and visuals (snow falling down in the snow level and more)
-         Implement a death counter
 """
 
 import pygame
@@ -24,11 +23,11 @@ from sprites import *
 from levels import *
 
 class Game():
-    def __init__(self):
+    def __init__(self, death_counter):
         self.running = True
         self.playing = True
         self.run_once_sign = True
-        self.run_once_concrete_drop = True
+        self.run_once_death_counter = True
         self.main_player_can_move = True
         self.draw_level = True
         self.reset_camera = False
@@ -50,7 +49,8 @@ class Game():
         self.enemies = pygame.sprite.Group() 
         self._load_data()
         self.level_index = 0
-        self.levels = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8, level_9, level_10, level_11]
+        self.death_counter = death_counter
+        self.levels = [level_10, level_11, level_12, opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8, level_9, level_10, level_11]
   
     def _load_data(self):
         self.main_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "enemies_maincharacter_spritesheet.png"))
@@ -62,7 +62,7 @@ class Game():
         self.burning_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "burning.wav"))
         self.ohh_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "classic_hurt.wav"))
 
-    def _events(self):
+    def events(self):
         """Event handlers"""
 
         for event in pygame.event.get():
@@ -90,19 +90,15 @@ class Game():
                     self.display_bigger_sign = False
                     self.main_player_can_move = True
 
+                if self.dead:
+                    if event.key == pygame.K_RETURN:
+                        main(self.death_counter)
+
             if self.main_player_can_move:
                 if event.type == pygame.KEYUP:
                     self.main_player.cut_jump()
             else:
                 pass
-            
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: #event.button == 1 is the leftmousebutton
-                mouse_pos = pygame.mouse.get_pos()
-                try: #Catch the error if the user has clicked on the area where play_again_btn should be, when it does not exist
-                    if self.play_again_btn.collidepoint(mouse_pos):
-                        main()
-                except AttributeError:
-                    pass
 
     def _draw_text(self, x, y, text, font_size, color):
         font = pygame.font.SysFont(FONT, font_size)
@@ -217,10 +213,10 @@ class Game():
 
         for enemy in enemy_list:
             if enemy.type == "snake":
-                self.game_over_text = "was eaten by snakes"
+                self.game_over_text = "got eaten by snakes"
                 return True
             if enemy.type == "sword chopper":
-                self.game_over_text = "was chopped with a deadly sword to death"
+                self.game_over_text = "was chopped to death"
                 return True
                 
     def _game_over_functionality(self, sound_when_dead, gameover_text_str):
@@ -247,7 +243,7 @@ class Game():
         if lava_hits:
             self._game_over_functionality([self.ohh_sound, self.burning_sound], "was burned to death")
         if fireball_hits:
-            self._game_over_functionality([self.ohh_sound, self.burning_sound], "was burned from a fireball to death")
+            self._game_over_functionality([self.ohh_sound, self.burning_sound], "was fireballed to death")
         if trap_hit:
             if self._check_trap_hit(trap_hit, hits_platform):
                 self.dead = True
@@ -261,8 +257,34 @@ class Game():
                 self._play_sound(self.ohh_sound)
                 self.game_over_screen()
 
-   
-    def _update(self):
+    def _which_platform_hit(self, platform_hit_list):
+        """Checks what kind of platform Joe has collided with. 
+        The main_player's (Joe) friction value varies from which 
+        kind of surface he is on"""
+
+        for plat in platform_hit_list:
+            if plat.snow:
+                self.main_player.jump_power = PLAYER_JUMP - 2 #let him jump higher to make it fair when jumping over axes
+                self.main_player.friction = -0.177 #Let Joe walk slower in the snow
+                the_snow_spot = platform_hit_list[0].rect.top + platform_hit_list[0].get_size(False) // 2 #let Joe sink down in to the snow
+            
+                if self.main_player.position.y > platform_hit_list[0].rect.top:
+                    if self.main_player.jumping:
+                        self.main_player.velocity.y *= SNOW_GRAVITY #Let Joe drown in the snow slowly
+
+                    self._adjust_player_platform_y_position(the_snow_spot) #Adjust Joe's y position until he reaches the_snow_spot
+            elif plat.concrete:
+                if not plat.transparent_plat: #transparent_plat=False then joe cant walk past the concrete platforms
+                    if (self.main_player.rect.right >= plat.rect.left and len(platform_hit_list) > 2 or
+                        self.main_player.rect.right >= plat.rect.left and self.main_player.jumping):
+                        self.main_player.position.x -= 2
+                    else:
+                        self._adjust_player_platform_y_position(plat.rect.top)
+            else: #The platform is a grass platform
+                self.main_player.friction = -0.09   
+                self._adjust_player_platform_y_position(plat.rect.top)
+
+    def update(self):
         """Update function which updates every sprites,
         checks for a sprite collision and moves the camera.
         Put in helper functions later"""
@@ -273,28 +295,8 @@ class Game():
         hits_platform = pygame.sprite.spritecollide(self.main_player, self.platforms, False) #List of platforms that Joe collided with
         if self.main_player.velocity.y > 0: #going down due to gravity
             if hits_platform:
-                for plat in hits_platform:
-                    if plat.snow:
-                        self.main_player.jump_power = PLAYER_JUMP - 2 #let him jump higher to make it fair when jumping over axes
-                        self.main_player.friction = -0.177 #Let Joe walk slower in the snow
-                        the_snow_spot = hits_platform[0].rect.top + hits_platform[0].get_size(False) // 2 #let Joe sink down in to the snow
-                    
-                        if self.main_player.position.y > hits_platform[0].rect.top:
-                            if self.main_player.jumping:
-                                self.main_player.velocity.y *= SNOW_GRAVITY #Let Joe drown in the snow slowly
-
-                            self._adjust_player_platform_y_position(the_snow_spot) #Adjust Joe's y position until he reaches the_snow_spot
-                    elif plat.concrete:
-                        if not plat.transparent_plat: #transparent_plat=False then joe cant walk past the concrete platforms
-                            if (self.main_player.rect.right >= plat.rect.left and len(hits_platform) > 2 or
-                                self.main_player.rect.right >= plat.rect.left and self.main_player.jumping):
-                                self.main_player.position.x -= 2
-                            else:
-                                self._adjust_player_platform_y_position(plat.rect.top)
-                    else:
-                        self.main_player.friction = -0.09   
-                        self._adjust_player_platform_y_position(plat.rect.top)
-    
+                self._which_platform_hit(hits_platform)
+                
         #blit the viewing perspective from Joe when he is reading on the sign (key input = (r))
         if self.display_bigger_sign:
             if self.run_once_sign:
@@ -321,19 +323,19 @@ class Game():
             self.main_player.kill()
             self._game_over_functionality(self.scream_sound, "fell")
 
-        #Function for traps collision, pass in hits_platform list which has a collsion 
-        #detection between the player and the platforms
-        """Uncomment these two lines below to enable traps collision with the player"""
-        #self.game_over_collision(hits_platform)
-
         #Don't let Joe go off the left side of the screen
         if self.main_player.position.x <= 0:
             self.main_player.position.x = 20
 
+        #Function for traps collision, pass in hits_platform list which has a collsion 
+        #detection between the player and the platforms
+        """Uncomment this line below to enable traps collision with the player"""
+        self.game_over_collision(hits_platform)
+
         self.move_main_player_camera() 
         self.change_level()
      
-    def _draw(self):
+    def draw(self):
         """Redraw window function which blits text on 
         the window again and again"""
 
@@ -342,10 +344,11 @@ class Game():
         #Display score and coins later
 
         if self.dead:
-            self.play_again_btn = pygame.draw.rect(WIN, BUTTON_COLOR, (WIDTH / 2 - PLAY_BTN_WIDTH / 2, HEIGHT / 2 - 20, PLAY_BTN_WIDTH, PLAY_BTN_HEIGHT))
+            self.play_again_btn = pygame.draw.rect(WIN, BUTTON_COLOR, (WIDTH / 2 - PLAY_BTN_WIDTH / 2, HEIGHT / 8 - 10, PLAY_BTN_WIDTH, PLAY_BTN_HEIGHT))
+            self._draw_text(WIDTH / 2, HEIGHT / 7, "Deaths: {}".format(self.death_counter), 40, BLACK)
             self._draw_text(WIDTH / 2, 140, "Game Over!", 40, WHITE)
             self._draw_text(WIDTH / 2, 170, "Joe {}!".format(self.game_over_text), 40, WHITE)
-            self._draw_text(WIDTH / 2, HEIGHT / 2, "Play Again!", 40, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 2, "Press \"Enter\" to play again!", 30, BLACK)
 
         if self.display_key_input_instructions:
             self._draw_text(self.pixel_sign.rect.centerx, self.pixel_sign.rect.y - 25, "Press r to read", 25, WHITE)
@@ -366,9 +369,9 @@ class Game():
 
         while self.playing:
             CLOCK.tick(FPS)
-            self._events()
-            self._update()
-            self._draw()
+            self.events()
+            self.update()
+            self.draw()
 
     def opening_level_part1(self):
         """This function blits 1/2 (part1) of the opening level in the game"""
@@ -410,6 +413,10 @@ class Game():
         if self.game_over_text != "fell":
             GraveStone(self.main_player.position.x - 100, self.main_player.position.y - 150, self)
 
+        if self.run_once_death_counter:
+            self.death_counter += 1
+            self.run_once_death_counter = False
+
         for trap in self.traps:
             try:
                 if not trap.spike: #kill every trap except the spike traps
@@ -422,12 +429,12 @@ class Game():
 
         self.main_player.kill()
 
-def main():
-    obsticle_game = Game()
+def main(death_counter):
+    obsticle_game = Game(death_counter)
 
     while obsticle_game.running:
         #obsticle_game.test_level()
         obsticle_game.opening_level_part1()
         obsticle_game.run()
 
-main()
+main(0)
