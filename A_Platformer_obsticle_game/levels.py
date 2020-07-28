@@ -1,5 +1,8 @@
 from sprites import *
 from game_settings import *
+from trap_sprites import *
+from enemy_sprites import *
+from fire_sprites import *
 
 SPIKE_NO_ANIMATION_HEIGHT_MARGIN = 40
 SPIKE_NO_ANIMATION_WIDTH_MARGIN = 42
@@ -91,7 +94,7 @@ def level_5(initial_platform, game):
     Platform(plat.rect.x - initial_platform.get_size(), plat.rect.y, game)
         
     for j in range(1, 18):
-        if j == 1 or j == 2 or j == 4 or j == 8 or j == 12 or j == 16:
+        if j in [1, 2, 4, 8, 12, 16]:
             spew_fire = False 
         else:
             spew_fire = True
@@ -212,11 +215,16 @@ def castle_level(initial_platform, game):
     cannon for the axe and the boulder"""
 
     for i in range(20):
+        if i == 9:
+            cannon_plat = Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
         if i == 13:
             start_castle_plat = Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
         if i == 16:
             castle_door_plat = Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
         Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
+
+    Cannon(cannon_plat, game)
+
 
     #The castle 
     for row in range(7):
@@ -225,33 +233,5 @@ def castle_level(initial_platform, game):
         if row % 2 == 0:
             Platform(top_castle_plat.rect.x, top_castle_plat.rect.y - initial_platform.get_size(False), game, False, True, False, True)
 
-    #This syntax is known as a function attribute because functions in python are treated like an object
+    #This syntax is known as a function attribute, because functions in python are treated like an object
     castle_level.door = CastleDoor(castle_door_plat.rect.x - 10, castle_door_plat.rect.y, game) 
-    
-        
-
-
-def level_13(initial_platform, game):
-    Platform(WIDTH + 5, 200, game) #A reminder platform to show where the width of the screen is 
-                                                #When to display the next level
-
-
-
-        
-    
-
-
-
-
-
-    
-
-
-
-
-
-
-
-    
-
-

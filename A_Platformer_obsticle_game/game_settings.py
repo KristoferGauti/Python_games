@@ -16,6 +16,7 @@ pygame.display.set_caption("Adventurous Joe")
 #Layers
 PLATFORM_LAYER = 3
 CASTLE_DOOR_LAYER = 4
+CANNON_LAYER = 2
 SNOW_LAYER = 5
 LAVA_LAYER = 2
 MAIN_CHARACTER_LAYER = 5

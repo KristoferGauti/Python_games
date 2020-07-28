@@ -21,6 +21,7 @@ from time import sleep
 from game_settings import *
 from sprites import *
 from levels import *
+from one_frame_sprites import *
 
 class Game():
     def __init__(self, death_counter):
@@ -52,7 +53,7 @@ class Game():
         self.enemies = pygame.sprite.Group() 
         self.door = pygame.sprite.Group()
         self._load_data()
-        self.level_index = 11 
+        self.level_index = 0 #11
         self.death_counter = death_counter
         self.levels = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8, level_9, level_10, level_11, castle_level]
   
@@ -336,6 +337,7 @@ class Game():
         #Don't let Joe go off the left side of the screen
         if self.main_player.position.x <= 0:
             self.main_player.position.x = 20
+        
 
         #Function for traps collision, pass in hits_platform list which has a collsion 
         #detection between the player and the platforms
