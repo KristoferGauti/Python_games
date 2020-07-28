@@ -17,8 +17,8 @@ class SpritesheetParser():
             image = pygame.transform.scale(image, (int(width * scale_num), int(height * scale_num)))
         else:
             image = pygame.transform.scale(image, (width // scale_num, height // scale_num))
-        image.set_colorkey(BLACK)
 
+        image.set_colorkey(BLACK) 
         return image
 
 class MainCharacter(pygame.sprite.Sprite):
@@ -672,8 +672,71 @@ class SwordChopper(pygame.sprite.Sprite):
             for plat in platform_hit:
                 if plat.concrete:
                     self.position.x, self.position.y = plat.rect.x, plat.rect.y
-            
 
+"""Castle door sprites"""
+class CastleDoorBackground(pygame.sprite.Sprite):
+    """We need this background class to display the door's background because 
+    the SpritesheetParser class takes the black background from all the sprites"""
+    
+    def __init__(self, x, y, game):
+        self._layer = CASTLE_DOOR_LAYER - 1
+        self.groups = game.all_sprites
+        super().__init__(self.groups)
+        black_surface = pygame.Surface((110, 100))
+        black_surface.fill(BLACK)
+        self.image = black_surface
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y + 10)
+
+class CastleDoor(pygame.sprite.Sprite):
+    def __init__(self, x, y, game):
+        self._layer = CASTLE_DOOR_LAYER
+        self.groups = game.all_sprites, game.door
+        super().__init__(self.groups)
+        self.game = game
+        self.last_update_time = 0
+        self.current_frame_index = 0
+        self._load_images()
+        self.image = self.door_images_list[0]
+        self.rect = self.image.get_rect()
+        self.rect.midbottom = (x, y)
+
+    def _load_images(self):
+        self.door_images_list = [
+            self.game.castle_switch_cannon_sprite_sheet.get_image(399, 0, 73, 59, 2, 2),
+            self.game.castle_switch_cannon_sprite_sheet.get_image(399, 73, 67, 58, 2),
+            self.game.castle_switch_cannon_sprite_sheet.get_image(150, 1840, 61, 61, 2),
+            self.game.castle_switch_cannon_sprite_sheet.get_image(211, 1840, 59, 60, 2),
+            self.game.castle_switch_cannon_sprite_sheet.get_image(399, 476, 72, 60, 2),
+        ]
+
+    def _animate(self):
+        time_now = pygame.time.get_ticks()
+
+        CastleDoorBackground(self.rect.centerx, self.rect.centery, self.game)
+
+        if time_now - self.last_update_time > 300:
+            self.last_update_time = time_now
+            self.current_frame_index = (self.current_frame_index + 1) % len(self.door_images_list)
+            last_image_midbottom = self.rect.midbottom
+            self.image = self.door_images_list[self.current_frame_index]
+            self.rect = self.image.get_rect()
+            self.rect.midbottom = last_image_midbottom
+
+        if self.current_frame_index == len(self.door_images_list) - 1:
+            self.kill()
+        
+    def update(self):
+        door_hit = pygame.sprite.spritecollide(self.game.main_player, self.game.door, False)
+
+        if door_hit:
+            self.game.door_collision = True
+        else:
+            self.game.door_collision = False
+
+        if self.game.open_door:
+            self._animate()
+            
 """One frame sprites"""
 class GameTitle(pygame.sprite.Sprite):
     def __init__(self, x, y, game):
@@ -713,6 +776,9 @@ class GraveStone(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+
+
 
 
 

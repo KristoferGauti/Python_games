@@ -194,6 +194,8 @@ def level_10(initial_platform, game):
         if i == 3 or i == 4:
             for up in range(1,7):
                 Platform(plat.rect.x, plat.rect.y - (initial_platform.get_size() * up), game, False, True)
+        if i == 3:
+            Bomb(mid_plat, game)
 
     SwordChopper(mid_plat, initial_platform.get_size() * 5, 2, game, False)
 
@@ -201,14 +203,35 @@ def level_11(initial_platform, game):
     for down in range(8):
         last_plat = Platform(WIDTH + 90 + (initial_platform.get_size() * down), 300 + (initial_platform.get_size(False) / 2 * down), game)
 
-    for x in range(10):
-        Platform(last_plat.rect.x + (initial_platform.get_size() * x), last_plat.rect.y, game)
+    for x in range(1, 11):
+        Platform(last_plat.rect.x + (initial_platform.get_size() * x), BOTTOM_PLATFORM_Y_COORDINATE, game)
 
-def level_12(initial_platform, game):
+def castle_level(initial_platform, game):
     """Castle gate level (need assets for a 
     castle gate, tresure chest, trigger(kill the minotaur), 
     cannon for the axe and the boulder"""
+
+    for i in range(20):
+        if i == 13:
+            start_castle_plat = Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
+        if i == 16:
+            castle_door_plat = Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
+        Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
+
+    #The castle 
+    for row in range(7):
+        for col in range(5):
+            top_castle_plat = Platform(start_castle_plat.rect.x + (initial_platform.get_size() * row - 34), start_castle_plat.rect.y - initial_platform.get_size(False) - (initial_platform.get_size() * col), game, False, True, False, True) #transparent concrete platform for the castle building. 34 is a random width margin
+        if row % 2 == 0:
+            Platform(top_castle_plat.rect.x, top_castle_plat.rect.y - initial_platform.get_size(False), game, False, True, False, True)
+
+    #This syntax is known as a function attribute because functions in python are treated like an object
+    castle_level.door = CastleDoor(castle_door_plat.rect.x - 10, castle_door_plat.rect.y, game) 
     
+        
+
+
+def level_13(initial_platform, game):
     Platform(WIDTH + 5, 200, game) #A reminder platform to show where the width of the screen is 
                                                 #When to display the next level
 

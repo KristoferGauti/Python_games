@@ -125,3 +125,16 @@ main_dict = [
 {"spritename":"minotaur-W-step2.png","x":865,"y":0,"height":64,"width":48},
 {"spritename":"minotaur-W-step1.png","x":913,"y":0,"height":64,"width":48},
 {"spritename":"signpost.png","x":961,"y":0,"height":42,"width":30}]
+
+#Castle, cannon and switch
+[{"spritename":"first_door.png","x":399,"y":0,"height":73,"width":59},
+{"spritename":"second_door.png","x":399,"y":73,"height":67,"width":58},
+{"spritename":"third_door.png","x":150,"y":1840,"height":61,"width":61},
+{"spritename":"fourth_door.png","x":211,"y":1840,"height":59,"width":60},
+{"spritename":"last_door.png","x":399,"y":476,"height":72,"width":60},
+{"spritename":"cannon_stand.png","x":399,"y":952,"height":68,"width":86},
+{"spritename":"cannon.png","x":0,"y":1840,"height":67,"width":150},
+{"spritename":"switch_up.png","x":0,"y":0,"height":476,"width":399},
+{"spritename":"switch_middle.png","x":0,"y":952,"height":476,"width":399},
+{"spritename":"switch_down.png","x":0,"y":476,"height":476,"width":399},
+{"spritename":"treasures.png","x":0,"y":1428,"height":412,"width":472}]
