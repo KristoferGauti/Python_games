@@ -141,7 +141,7 @@ class Game():
             if trap_hit_list[0].spike:
                 try:
                     if hits_platform[0].rect.top and trap_hit_list[0].spike_go_up:
-                        self.game_over_text = "was stung to death"
+                        self.game_over_text = "was stung to death!"
                         return True
                     if (trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.bottom or
                     trap_hit_list[0].spike_go_down and trap_hit_list[0].rect.left or
@@ -149,15 +149,15 @@ class Game():
                         return False
 
                 except IndexError:
-                    self.game_over_text = "was stung to death"
+                    self.game_over_text = "was stung to death!"
                     return True
                 
             elif trap_hit_list[0].stone:
-                self.game_over_text = "was hit by a boulder and died"
+                self.game_over_text = "was hit by a boulder and died!"
                 return True
 
             elif trap_hit_list[0].axe:
-                self.game_over_text = "was cut by an axe to death"
+                self.game_over_text = "was cut by an axe to death!"
                 return True
 
         except AttributeError:
@@ -230,10 +230,10 @@ class Game():
 
         for enemy in enemy_list:
             if enemy.type == "snake":
-                self.game_over_text = "got eaten by snakes"
+                self.game_over_text = "got eaten by snakes!"
                 return True
             if enemy.type == "sword chopper":
-                self.game_over_text = "was chopped to death"
+                self.game_over_text = "was chopped to death!"
                 return True
                 
     def _game_over_functionality(self, sound_when_dead, gameover_text_str):
@@ -258,9 +258,9 @@ class Game():
         bullet_hit = pygame.sprite.spritecollide(self.main_player, self.cannon_bullets, False, pygame.sprite.collide_mask)
 
         if lava_hits:
-            self._game_over_functionality([self.ohh_sound, self.burning_sound], "was burned to death")
+            self._game_over_functionality([self.ohh_sound, self.burning_sound], "was burned to death!")
         if fireball_hits:
-            self._game_over_functionality([self.ohh_sound, self.burning_sound], "was fireballed to death")
+            self._game_over_functionality([self.ohh_sound, self.burning_sound], "was fireballed to death!")
         if trap_hit:
             if self._check_trap_hit(trap_hit, hits_platform):
                 self.dead = True
@@ -268,9 +268,9 @@ class Game():
                 self.game_over_screen()
         if bullet_hit:
             if bullet_hit[0].bullet_type == "stone":
-                self._game_over_functionality(self.ohh_sound, "was killed by a stone")
+                self._game_over_functionality(self.ohh_sound, "was hit by a boulder and died!")
             else:
-                self._game_over_functionality(self.ohh_sound, "was killed by an axe")
+                self._game_over_functionality(self.ohh_sound, "was cut by an axe to death!")
             
         if enemy_hit:
             if self._check_enemy_hit(enemy_hit):
@@ -304,6 +304,40 @@ class Game():
             else: #The platform is a grass platform or castle platform
                 self.main_player.friction = -0.09   
                 self._adjust_player_platform_y_position(plat.rect.top)
+
+    def _castle_door_functionality(self):
+        """Function that animates the open and closing 
+        animation for the castle door in the castle_level"""
+
+        if self.door_opened: #when the door animation is done then...
+            if not self.start_boss_level_list: #if this if statement oes not exist then the platforms disappear
+                for sprite in self.all_sprites: #remove all the sprites except for the main_player, Joe
+                    if sprite._layer != MAIN_CHARACTER_LAYER:
+                        sprite.kill()
+
+            if self.reset_variables_once: #reset the variables which are necessary for the boss_level_list
+                self.level_index = -1 #self.opening_boss_level() is the level at -1 index
+                self.camera_movement_x_coordinate = CAMERA_FOCUSPOINT_X_POS
+                self.start_boss_level_list = True
+                self.stop_camera_movement = False
+                self.reset_variables_once = False
+
+            self.door_opened = False
+        else:
+            #close the door
+            if self.start_boss_level_list:
+                self.castle_door.close_door = True
+
+        #run the self.boss_level_list
+        if self.start_boss_level_list:
+            if self.run_boss_opening_lvl_once:
+                self.opening_boss_level()
+                self.run_boss_opening_lvl_once = False
+
+        # print()
+        #print(self.open_door)
+        # print(self.door_opened)
+        # print(self.start_boss_level_list)
 
     def update(self):
         """Update function which updates every sprites,
@@ -342,10 +376,12 @@ class Game():
             self.main_player.kill()
             self._game_over_functionality(self.scream_sound, "fell")
 
-        #Don't let Joe go off the left side of the screen
+        #Don't let Joe go off the left or right side of the screen
         if self.main_player.position.x <= 0:
             self.main_player.position.x = 20
-    
+        elif self.main_player.position.x >= WIDTH and self.stop_camera_movement:
+            self.main_player.position.x = WIDTH - 20
+        
         #Function for traps collision, pass in hits_platform list which has a collsion 
         #detection between the player and the platforms
         """Uncomment this line below to enable traps collision with the player"""
@@ -358,28 +394,9 @@ class Game():
             else:
                 self.change_level(self.boss_level_list)
 
-        if self.open_door:
-            if self.door_opened:
-                if not self.start_boss_level_list:
-                    for sprite in self.all_sprites:
-                        if sprite._layer != MAIN_CHARACTER_LAYER:
-                            sprite.kill()
+        #This function executes when the castle door in the castle level opens
+        self._castle_door_functionality()
 
-                if self.reset_variables_once:
-                    self.level_index = -1 #self.opening_boss_level() is the level at -1 index
-                    self.camera_movement_x_coordinate = CAMERA_FOCUSPOINT_X_POS
-                    self.start_boss_level_list = True
-                    self.stop_camera_movement = False
-                    self.reset_variables_once = False
-                self.door_opened = False
-
-        if self.start_boss_level_list:
-            if self.run_boss_opening_lvl_once:
-                self.opening_boss_level()
-                self.run_boss_opening_lvl_once = False
-
-        #print(self.start_boss_level_list)
-    
     def draw(self):
         """Redraw window function which blits text on 
         the window again and again"""
@@ -409,8 +426,9 @@ class Game():
             self._draw_text(WIDTH / 2, line_space + 320, "Sincerely yours, Jack", 23, WHITE)
             self._draw_text(WIDTH / 2, line_space + 360, "Press b to continue the adventure", 24, BLACK)
 
-        if self.door_collision and not self.open_door:
-            self._draw_text(castle_level.door.rect.centerx, castle_level.door.rect.y - 20, "Press o to open the door", 25, WHITE)    
+        if not self.start_boss_level_list:
+            if self.door_collision and not self.open_door:
+                self._draw_text(castle_level.door.rect.centerx, castle_level.door.rect.y - 20, "Press o to open the door", 25, WHITE)    
 
         pygame.display.flip()
 
@@ -439,12 +457,12 @@ class Game():
                 SingleFrameSpriteTrap(plat.rect.x, plat.rect.y, self)
 
     def opening_boss_level(self):
-        self.main_player.position.x, self.main_player.position.y = 40, HEIGHT - 50
-        self.grass_platform = Platform(self.main_player.position.x - 40, BOTTOM_PLATFORM_Y_COORDINATE, self)
+        self.main_player.position.x, self.main_player.position.y = 150, HEIGHT - 50
+        self.castle_door = CastleDoor(self.main_player.position.x + 30, self.main_player.position.y + 10, self)
+        self.grass_platform = Platform(0, BOTTOM_PLATFORM_Y_COORDINATE, self)
 
         for i in range(1, 47):
             Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, self)
-            
         
     def game_over_screen(self):
         self.main_player.velocity.x = 0

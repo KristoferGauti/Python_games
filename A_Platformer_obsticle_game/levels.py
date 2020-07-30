@@ -241,6 +241,7 @@ def castle_level(initial_platform, game):
 
 def boss_level(initial_platform, game):
     """Here starts the boss level (red minotaur level)"""
-    Platform(WIDTH + 50, HEIGHT - 100, game)
+    for i in range(19):
+        Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
 
 

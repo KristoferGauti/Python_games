@@ -192,13 +192,16 @@ class CastleDoorBackground(pygame.sprite.Sprite):
     """We need this background class to display the door's background because 
     the SpritesheetParser class takes the black background from all the sprites"""
     
-    def __init__(self, x, y, game):
+    def __init__(self, x, y, game, door_open=True):
         self._layer = CASTLE_DOOR_LAYER - 1
         self.groups = game.all_sprites
         super().__init__(self.groups)
         black_surface = pygame.Surface((110, 100))
         black_surface.fill(BLACK)
-        self.image = black_surface
+        if door_open:
+            self.image = black_surface
+        else:
+            self.image = game.castle_switch_cannon_sprite_sheet.get_image(399, 0, 73, 59, 2, 2)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y + 10)
 
@@ -208,6 +211,7 @@ class CastleDoor(pygame.sprite.Sprite):
         self.groups = game.all_sprites, game.door
         super().__init__(self.groups)
         self.game = game
+        self.close_door = False
         self.last_update_time = 0
         self.current_frame_index = 0
         self._load_images()
@@ -223,24 +227,28 @@ class CastleDoor(pygame.sprite.Sprite):
             self.game.castle_switch_cannon_sprite_sheet.get_image(211, 1840, 59, 60, 2),
             self.game.castle_switch_cannon_sprite_sheet.get_image(399, 476, 72, 60, 2),
         ]
+        self.reversed_door_images_list = self.door_images_list[::-1]
 
-    def _animate(self):
+    def _animate(self, image_list):
         time_now = pygame.time.get_ticks()
 
-        CastleDoorBackground(self.rect.centerx, self.rect.centery, self.game)
-
-        if time_now - self.last_update_time > 300:
+        if time_now - self.last_update_time > 400:
             self.last_update_time = time_now
-            self.current_frame_index = (self.current_frame_index + 1) % len(self.door_images_list)
+            self.current_frame_index = (self.current_frame_index + 1) % len(image_list)
             last_image_midbottom = self.rect.midbottom
-            self.image = self.door_images_list[self.current_frame_index]
+            self.image = image_list[self.current_frame_index]
             self.rect = self.image.get_rect()
             self.rect.midbottom = last_image_midbottom
-
-        if self.current_frame_index == len(self.door_images_list) - 1:
+        
+        CastleDoorBackground(self.rect.centerx, self.rect.centery, self.game) #Black square for the opened door background
+        
+        if self.current_frame_index == len(image_list) - 1:
             self.game.door_opened = True
             self.kill()
-        
+
+            if self.close_door:
+                CastleDoorBackground(self.rect.centerx, self.rect.centery - 10, self.game, False) #closed door background image 
+  
     def update(self):
         door_hit = pygame.sprite.spritecollide(self.game.main_player, self.game.door, False)
 
@@ -250,4 +258,7 @@ class CastleDoor(pygame.sprite.Sprite):
             self.game.door_collision = False
 
         if self.game.open_door:
-            self._animate()
+            if not self.game.start_boss_level_list:
+                self._animate(self.door_images_list)
+        if self.close_door:              
+            self._animate(self.reversed_door_images_list)
