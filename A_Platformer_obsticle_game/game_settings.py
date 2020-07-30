@@ -25,6 +25,8 @@ FIREBALL_LAYER = 1
 TITLE_LAYER = 2
 PIXEL_SIGN_LAYER = 3
 ENEMY_LAYER = 2
+GOLD_PILE_LAYER = 3
+DEATH_SWITCH_LAYER = 3
 
 #Main character's and enemy's properties
 GRAVITY = 0.8

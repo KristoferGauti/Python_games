@@ -3,6 +3,7 @@ from game_settings import *
 from trap_sprites import *
 from enemy_sprites import *
 from fire_sprites import *
+from one_frame_sprites import GoldPile
 
 SPIKE_NO_ANIMATION_HEIGHT_MARGIN = 40
 SPIKE_NO_ANIMATION_WIDTH_MARGIN = 42
@@ -242,6 +243,22 @@ def castle_level(initial_platform, game):
 def boss_level(initial_platform, game):
     """Here starts the boss level (red minotaur level)"""
     for i in range(19):
-        Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
+        if i in [num for num in range(13, 19)]: 
+            if i == 15:
+                golden_pile_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size() // 2, game)
+            last_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size() // 2, game)
+        else:
+            """Boss platforms"""
+            Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size(), game)
+
+    for up in range(12):
+        if up == 5:
+            switch_wall_plat = Platform(last_plat.rect.x, last_plat.rect.y - (initial_platform.get_size(False) * up), game, False, True) #concrete wall
+        Platform(last_plat.rect.x, last_plat.rect.y - (initial_platform.get_size(False) * up), game, False, True) #concrete wall
+
+    GoldPile(golden_pile_plat, game)
+    DeathSwitch(switch_wall_plat, game)
+
+    
 
 

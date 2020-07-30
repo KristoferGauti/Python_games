@@ -232,7 +232,7 @@ class CastleDoor(pygame.sprite.Sprite):
     def _animate(self, image_list):
         time_now = pygame.time.get_ticks()
 
-        if time_now - self.last_update_time > 400:
+        if time_now - self.last_update_time > 300:
             self.last_update_time = time_now
             self.current_frame_index = (self.current_frame_index + 1) % len(image_list)
             last_image_midbottom = self.rect.midbottom
@@ -262,3 +262,29 @@ class CastleDoor(pygame.sprite.Sprite):
                 self._animate(self.door_images_list)
         if self.close_door:              
             self._animate(self.reversed_door_images_list)
+
+class DeathSwitch(pygame.sprite.Sprite):
+    def __init__(self, spawn_wall_plat, game):
+        self._layer = DEATH_SWITCH_LAYER
+        self.groups = game.all_sprites, game.switcher 
+        super().__init__(self.groups)
+        self.game = game
+        self._load_images()
+        self.image = self.switch_img_list[0]
+        self.rect = self.image.get_rect()
+        self.rect.right = spawn_wall_plat.rect.left
+        self.rect.y = spawn_wall_plat.rect.y
+
+    def _load_images(self):
+        switch_img_list = [
+            self.game.castle_switch_cannon_sprite_sheet.get_image(0, 0, 476, 399, 5, False),
+            self.game.castle_switch_cannon_sprite_sheet.get_image(0, 952, 476, 399, 5, False),
+            self.game.castle_switch_cannon_sprite_sheet.get_image(0, 476, 476, 399, 5, False)
+        ]
+        self.switch_img_list = [pygame.transform.rotate(img, 180) for img in switch_img_list]
+
+    def _animate(self):
+        pass
+
+    def update(self):
+        self._animate()

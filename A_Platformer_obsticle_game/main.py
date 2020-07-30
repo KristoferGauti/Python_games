@@ -54,9 +54,10 @@ class Game():
         self.fireballs = pygame.sprite.Group()
         self.traps = pygame.sprite.Group() 
         self.cannon_bullets = pygame.sprite.Group()
-        self.sign = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group() 
+        self.sign = pygame.sprite.Group()
         self.door = pygame.sprite.Group()
+        self.switcher = pygame.sprite.Group()
         self._load_data()
         self.level_index = 12
         self.death_counter = death_counter
@@ -462,7 +463,13 @@ class Game():
         self.grass_platform = Platform(0, BOTTOM_PLATFORM_Y_COORDINATE, self)
 
         for i in range(1, 47):
-            Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, self)
+            if i == 38:
+                Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - self.grass_platform.get_size() // 2, self) #one step up platform
+            elif i >= 39:
+                """The boss platforms"""
+                Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - self.grass_platform.get_size(), self)
+            else:
+                Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, self) #bottom platforms y = HEIGHT - 50
         
     def game_over_screen(self):
         self.main_player.velocity.x = 0
