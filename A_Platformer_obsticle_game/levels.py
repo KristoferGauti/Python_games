@@ -215,6 +215,8 @@ def castle_level(initial_platform, game):
     cannon for the axe and the boulder"""
 
     for i in range(20):
+        if i == 0:
+            snake_plat = Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
         if i == 9:
             cannon_plat = Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
         if i == 13:
@@ -224,6 +226,7 @@ def castle_level(initial_platform, game):
         Platform(WIDTH + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
 
     Cannon(cannon_plat, game)
+    Snake(snake_plat, game)
 
 
     #The castle 
@@ -235,3 +238,9 @@ def castle_level(initial_platform, game):
 
     #This syntax is known as a function attribute, because functions in python are treated like an object
     castle_level.door = CastleDoor(castle_door_plat.rect.x - 10, castle_door_plat.rect.y, game) 
+
+def boss_level(initial_platform, game):
+    """Here starts the boss level (red minotaur level)"""
+    Platform(WIDTH + 50, HEIGHT - 100, game)
+
+

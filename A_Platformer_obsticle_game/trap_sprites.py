@@ -3,6 +3,7 @@ import random
 from game_settings import *
 from sprites import Platform
 
+
 class SingleFrameSpriteTrap(pygame.sprite.Sprite):
     def __init__(self, x, y, game, animation=True, spike=True, stone=False, axe=False):
         self._layer = TRAP_LAYER
@@ -26,7 +27,7 @@ class SingleFrameSpriteTrap(pygame.sprite.Sprite):
         if self.stone or self.axe:
             self.axe_down = True
             the_image = game.traps_sprite_sheet.get_image(0, 0, 394, 394, 5, False) if self.stone else game.traps_sprite_sheet.get_image(0, 394, 372, 248, 5, False)
-            self.stop_axe_image_list = [pygame.transform.rotate(the_image, angle) for angle in range(300, 360, 15)] #320
+            self.stop_axe_image_list = [pygame.transform.rotate(the_image, angle) for angle in range(300, 360, 15)] 
             self.random_num = random.randint(0, len(self.stop_axe_image_list) - 1)
             self.image_rotation_list = [pygame.transform.rotate(the_image, angle) for angle in range(0, 361, 90)]
             self.image = self.image_rotation_list[0]
@@ -121,24 +122,72 @@ class CannonHead(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = y
 
+class CannonBullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, bullet_type, game):
+        self._layer = TRAP_LAYER
+        self.groups = game.all_sprites, game.cannon_bullets
+        super().__init__(self.groups)
+        self.bullet_type = bullet_type
+        self.last_update_time = 0
+        self.update_frame_index = 0
+        if self.bullet_type == "stone":
+            the_image = game.traps_sprite_sheet.get_image(0, 0, 394, 394, 5, False)
+        elif self.bullet_type == "axe":
+            the_image = game.traps_sprite_sheet.get_image(0, 394, 372, 248, 5, False)
+        self.image_rotation_list = [pygame.transform.rotate(the_image, angle) for angle in range(0, 361, 90)]
+        self.image = self.image_rotation_list[0]
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def _animate(self):
+        time_now = pygame.time.get_ticks()
+
+        millisecs = 150 if self.bullet_type == "stone" else 70
+        if time_now - self.last_update_time > millisecs:
+            self.last_update_time = time_now
+            self.update_frame_index = (self.update_frame_index + 1) % len(self.image_rotation_list)
+            self.image = self.image_rotation_list[self.update_frame_index]
+
+    def update(self):
+        self._animate()
+
+        self.rect.x -= random.randrange(5, 10)
+        self.rect.y -= random.randrange(3, 5)
+
 class Cannon(pygame.sprite.Sprite):
     def __init__(self, spawn_platform, game):
         self._layer = CANNON_LAYER + 1
         self.groups = game.all_sprites
         super().__init__(self.groups)
         self.game = game
-        self.image = self.game.castle_switch_cannon_sprite_sheet.get_image(399, 952, 68, 86, 1)
+        self.last_update_time = 0
+        self.random_num = 0
+        self.image = self.game.castle_switch_cannon_sprite_sheet.get_image(399, 952, 68, 86, 1) #Cannon stand
         self.rect = self.image.get_rect()
         self.rect.centerx = spawn_platform.rect.centerx
         self.rect.bottom = spawn_platform.rect.top
-        CannonHead(self.rect.x - 5, self.rect.y - 5, self.game)
-
-    def _animate(self):
-        pass
+        self.cannon_head = CannonHead(self.rect.x - 5, self.rect.y - 5, self.game)
+        self.bullet = CannonBullet(self.cannon_head.rect.x - 40, self.cannon_head.rect.y - 20, "axe", self.game)
 
     def update(self):
-        self._animate()
+        """The cannon shoots either a stone or an axe.
+        There is a 34% chance of shooting an axe 66% chance of shooting a stone"""
 
+        if self.bullet.rect.bottom < 0 or self.bullet.rect.right < 0:
+            time_now = pygame.time.get_ticks()
+            if time_now - self.last_update_time > 2000: #2 seconds cooldown
+                self.last_update_time = time_now
+                self.random_num = random.randrange(1,100)
+
+                if not self.game.dead:
+                    if self.random_num % 3 == 0: #34% chance
+                        self.bullet.kill()
+                        self.bullet = CannonBullet(self.cannon_head.rect.x - 40, self.cannon_head.rect.y - 20, "axe", self.game)
+                    else: #66% chance
+                        self.bullet.kill()
+                        self.bullet = CannonBullet(self.cannon_head.rect.x - 40, self.cannon_head.rect.y - 20, "stone", self.game)
+                    
 class Bomb(pygame.sprite.Sprite):
     def __init__(self, spawn_plat, game, scale_down_explosion_sprites_num=1):
         self._layer = TRAP_LAYER

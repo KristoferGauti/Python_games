@@ -35,8 +35,8 @@ PLAYER_JUMP = -18
 #Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-
 SKYBLUE = (50, 153, 204)
+DEATHBGCOLOR = (77,20,20)
 BUTTON_COLOR = (139, 69, 19)
 
 #traps properties
@@ -44,8 +44,6 @@ SPIKE_HEIGHT = 40
 LAVA_BALL_FRICTION = -0.09
 
 #Additional constants
-PLAY_BTN_WIDTH = 500
-PLAY_BTN_HEIGHT = HEIGHT / 2
 CAMERA_FOCUSPOINT_X_POS = 230 #Can change to 130 otherwise do not change this constant
 BOTTOM_PLATFORM_Y_COORDINATE = HEIGHT - 40
 

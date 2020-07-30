@@ -71,7 +71,7 @@ class MainCharacter(pygame.sprite.Sprite):
             self.walking = False
 
         #Standing animation
-        if not self.walking and not self.jumping: #nearly the same code @@, put in a function later
+        if not self.walking and not self.jumping:
             if time_now - self.last_update_time > 320:
                 self.last_update_time = time_now
                 self.current_frame_index = (self.current_frame_index + 1) % len(self.standing_frames_right)
@@ -83,7 +83,7 @@ class MainCharacter(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.bottom = last_image_bottom
 
-        if self.walking: #nearly the same code @@
+        if self.walking:
             if time_now - self.last_update_time > 90:
                 self.last_update_time = time_now
                 self.current_frame_index = (self.current_frame_index + 1) % len(self.left_walking_frames)
@@ -238,6 +238,7 @@ class CastleDoor(pygame.sprite.Sprite):
             self.rect.midbottom = last_image_midbottom
 
         if self.current_frame_index == len(self.door_images_list) - 1:
+            self.game.door_opened = True
             self.kill()
         
     def update(self):
