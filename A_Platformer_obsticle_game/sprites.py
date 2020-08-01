@@ -11,14 +11,19 @@ class SpritesheetParser():
         self.spritesheet = pygame.image.load(filename).convert_alpha()
 
     def get_image(self, x, y, height, width, scale_num, scale_up=True):
-        image = pygame.Surface((width, height))
+        image = pygame.Surface((width, height)) #default background color is (0, 0, 0)
+        image.fill(SPRITESHEET_BG_SURFACE_COLOR)
+
         image.blit(self.spritesheet, (0, 0), (x, y, width, height))
         if scale_up:
             image = pygame.transform.scale(image, (int(width * scale_num), int(height * scale_num)))
         else:
             image = pygame.transform.scale(image, (width // scale_num, height // scale_num))
 
-        image.set_colorkey(BLACK) 
+        #Donnot fill the background color of the spritesheet surface black because set_colorkey((0, 0, 0))
+        #will erase the black color from the sprite aswell as the background color 
+        image.set_colorkey(SPRITESHEET_BG_SURFACE_COLOR) 
+
         return image
 
 class MainCharacter(pygame.sprite.Sprite):
@@ -38,7 +43,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.position = vector(x, y)
         self.velocity = vector(0, 0)
         self.acceleration = vector(0, 0)
-        self.friction = -0.09 
+        self.friction = FRICTION
         self.jump_power = PLAYER_JUMP
         self.mask = pygame.mask.from_surface(self.image)
 
@@ -113,8 +118,6 @@ class MainCharacter(pygame.sprite.Sprite):
             if keys[pygame.K_RIGHT]:
                 self.acceleration.x = ACCELERATION
                 self.stand_left = False
-        else:
-            pass
 
         #Friction phisics equations
         self.acceleration.x += self.velocity.x * self.friction
@@ -124,7 +127,6 @@ class MainCharacter(pygame.sprite.Sprite):
         
         self.rect.midbottom = self.position
 
-        
     def jump(self):
         self.rect.x += 10
         hits = pygame.sprite.spritecollide(self, self.game.platforms, False)
@@ -187,7 +189,6 @@ class Platform(pygame.sprite.Sprite):
         if concrete_platforms_qty_now < self.concrete_plat_qty:
             self.concrete_plat_blown_up = True
 
-"""Castle door sprites"""
 class CastleDoorBackground(pygame.sprite.Sprite):
     """We need this background class to display the door's background because 
     the SpritesheetParser class takes the black background from all the sprites"""
@@ -269,11 +270,16 @@ class DeathSwitch(pygame.sprite.Sprite):
         self.groups = game.all_sprites, game.switcher 
         super().__init__(self.groups)
         self.game = game
+        self.last_update_time = 0
+        self.current_frame_index = 0
+        self.switch_animate_up = False
+        self.switch_is_on = False
         self._load_images()
         self.image = self.switch_img_list[0]
         self.rect = self.image.get_rect()
         self.rect.right = spawn_wall_plat.rect.left
         self.rect.y = spawn_wall_plat.rect.y
+        self.mask = pygame.mask.from_surface(self.image)
 
     def _load_images(self):
         switch_img_list = [
@@ -284,7 +290,31 @@ class DeathSwitch(pygame.sprite.Sprite):
         self.switch_img_list = [pygame.transform.rotate(img, 180) for img in switch_img_list]
 
     def _animate(self):
-        pass
+        time_now = pygame.time.get_ticks()
 
+        if time_now - self.last_update_time > 400:
+            self.last_update_time = time_now
+            last_image_right = self.rect.right
+            last_centery = self.rect.centery
+            self.current_frame_index = (1 + self.current_frame_index) % len(self.switch_img_list)
+            self.image = self.switch_img_list[self.current_frame_index]
+            self.rect = self.image.get_rect()
+            self.rect.right = last_image_right
+            self.rect.centery = last_centery
+
+        if self.current_frame_index == len(self.switch_img_list) - 1:
+            self.image = self.switch_img_list[self.current_frame_index]
+            self.switch_animate_up = False
+            self.switch_is_on = True
+            
     def update(self):
-        self._animate()
+        switch_hit = pygame.sprite.spritecollide(self.game.main_player, self.game.switcher, False, pygame.sprite.collide_mask)
+        if not self.switch_is_on:
+            if switch_hit:
+                self.switch_animate_up = True #run the animation
+        else: #if the switch is on 
+            for boss_death_plat in self.game.boss_platforms_list: #move all the platforms downwards to kill the minotaur
+                boss_death_plat.kill()
+
+        if self.switch_animate_up:
+            self._animate()

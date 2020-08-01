@@ -249,7 +249,12 @@ def boss_level(initial_platform, game):
             last_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size() // 2, game)
         else:
             """Boss platforms"""
-            Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size(), game)
+            if i == 10:
+                boss_spawn_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size(), game)
+                game.boss_platforms_list.append(boss_spawn_plat)
+                
+            boss_death_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size(), game)
+            game.boss_platforms_list.append(boss_death_plat)
 
     for up in range(12):
         if up == 5:
@@ -258,6 +263,7 @@ def boss_level(initial_platform, game):
 
     GoldPile(golden_pile_plat, game)
     DeathSwitch(switch_wall_plat, game)
+    MinotaurBoss(boss_spawn_plat, game)
 
     
 

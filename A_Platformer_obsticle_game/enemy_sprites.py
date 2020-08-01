@@ -1,9 +1,123 @@
 import pygame
 import random
+import os
+import math
 from game_settings import *
 from sprites import Platform
 
 vector = pygame.math.Vector2
+
+class MinotaurBoss(pygame.sprite.Sprite):
+    def __init__(self, platform, game):
+        self._layer = ENEMY_LAYER
+        self.groups = game.all_sprites, game.enemies
+        super().__init__(self.groups)
+        self.game = game
+        self.type = "boss"
+        self.move = "stop"
+        self.current_frame_index = 0
+        self.last_update_time = 0
+        self.acceleration_x_speed = 3.1
+        self._load_images()
+        self.image = self.standby_img_list[0]
+        self.rect = self.image.get_rect()
+        self.rect.bottom = platform.rect.top
+        self.rect.centerx = platform.rect.centerx 
+        self.position = vector(self.rect.centerx, self.rect.bottom)
+        self.acceleration = vector(0, 0)
+        self.velocity = vector(0, 0)
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def _load_images(self):
+        self.standby_img_list = [self.game.title_boss_sprite_sheet.get_image(769, 0, 64, 48, 2, True)]
+        self.walking_left_img_list = [
+            self.game.title_boss_sprite_sheet.get_image(817, 0, 64, 48, 2, True),
+            self.game.title_boss_sprite_sheet.get_image(865, 0, 64, 48, 2, True),
+            self.game.title_boss_sprite_sheet.get_image(913, 0, 64, 48, 2, True)
+        ]
+        self.walking_right_img_list = [pygame.transform.flip(img, True, False) for img in self.walking_left_img_list]
+
+    def _animate(self):
+        time_now = pygame.time.get_ticks()
+
+        if time_now - self.last_update_time > 150:
+            self.last_update_time = time_now
+            last_image_bottom = self.rect.bottom
+            if self.acceleration.x > 0:
+                self.current_frame_index = (self.current_frame_index + 1) % len(self.walking_right_img_list)
+                self.image = self.walking_right_img_list[self.current_frame_index]
+            if self.acceleration.x < 0:
+                self.current_frame_index = (self.current_frame_index + 1) % len(self.walking_left_img_list)
+                self.image = self.walking_left_img_list[self.current_frame_index]
+            if self.acceleration.x == 0:
+                self.current_frame_index = (self.current_frame_index + 1) % len(self.standby_img_list)
+                self.image = self.standby_img_list[self.current_frame_index]
+            self.rect = self.image.get_rect()
+            self.rect.bottom = last_image_bottom
+
+    def _boss_moving_boundaries(self):
+        """This function checks if the boss has dropped down dead and 
+        it uses the moving boundaries function from the Game() object 
+        to set moving boundaries for the minotaur boss"""
+
+        if self.rect.top > HEIGHT:
+            self.kill()
+
+        self.game._character_moving_boundaries(self)
+
+    def charge(self):
+        pass
+        
+    def jump(self):
+        pass
+
+    def move_minotaur(self):
+        self.acceleration = vector(0, GRAVITY)
+
+        if self.move == "right":
+            self.acceleration.x = self.acceleration_x_speed #walk right
+        elif self.move == "left":
+            self.acceleration.x = -self.acceleration_x_speed #walk left
+        else:
+            self.acceleration.x = 0
+
+        self.velocity.y += self.acceleration.y
+        self.position += self.velocity + self.acceleration
+        self.rect.midbottom = self.position
+
+    def update(self):
+        self._animate()
+        self._boss_moving_boundaries()
+        self.move_minotaur()
+
+        plat_hits = pygame.sprite.spritecollide(self, self.game.platforms, False)
+        if plat_hits:
+            self.velocity.y = 0
+            self.position.y = plat_hits[0].rect.top
+        
+
+        dx, dy = self.game.main_player.rect.x - self.rect.x, self.game.main_player.rect.y - self.rect.y
+        print(dx, dy)
+
+        if dx < 0:
+            self.move = "left"
+            if self.position.x < self.game.main_player.position.x + 200: #if the boss is within 200 pixels 
+                self.move = "stop"
+        elif dx > 0:
+            self.move = "right"
+        
+        # if self.position.x < self.game.main_player.position.x + 300: #if the boss is within 400 pixels 
+        #     self.move = "left"
+        #     if int(self.game.main_player.velocity.x) < 0:
+        #         self.move = "right"
+        # else:
+        #     self.move = "stop"
+
+        # print("Joe pos:", self.game.main_player.position)
+        #print(self.game.main_player.velocity.x)
+        # print("minotaur pos:", self.position)
+        #print(self.acceleration)
+
 
 class Snake(pygame.sprite.Sprite):
     def __init__(self, spawn_platform, game):

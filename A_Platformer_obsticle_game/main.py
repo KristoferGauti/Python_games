@@ -63,6 +63,7 @@ class Game():
         self.death_counter = death_counter
         self.levels_list = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8, level_9, level_10, level_11, castle_level]
         self.boss_level_list = [boss_level]
+        self.boss_platforms_list = []
   
     def _load_data(self):
         self.main_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "enemies_maincharacter_spritesheet.png"))
@@ -106,6 +107,8 @@ class Game():
                 if self.door_collision:
                     if event.key == pygame.K_o:
                         self.open_door = True
+                        self.main_player_can_move = False
+                        
                         
 
                 if self.dead:
@@ -187,11 +190,13 @@ class Game():
                     lavaball.kill()
  
             for enemy in self.enemies:
-                if enemy.type == "sword chopper":
+                if enemy.type == "sword chopper" :
                     enemy.position.x -= camera_speed
                     enemy.initial_x_position -= camera_speed
                     if enemy.position.x + 50 < 0 or enemy.position.y > HEIGHT + 50:
                         enemy.kill()
+                elif enemy.type == "boss":
+                    enemy.position.x -= camera_speed
 
             self.main_player.position.x -= camera_speed 
 
@@ -235,6 +240,9 @@ class Game():
                 return True
             if enemy.type == "sword chopper":
                 self.game_over_text = "was chopped to death!"
+                return True
+            if enemy.type == "boss":
+                self.game_over_text = "was killed by the red angry minotaur"
                 return True
                 
     def _game_over_functionality(self, sound_when_dead, gameover_text_str):
@@ -331,14 +339,19 @@ class Game():
 
         #run the self.boss_level_list
         if self.start_boss_level_list:
+            self.main_player_can_move = True
             if self.run_boss_opening_lvl_once:
                 self.opening_boss_level()
                 self.run_boss_opening_lvl_once = False
 
-        # print()
-        #print(self.open_door)
-        # print(self.door_opened)
-        # print(self.start_boss_level_list)
+    def _character_moving_boundaries(self, character):
+        """This function sets the characters moving boundaries so
+        that the character does not go out of the screen"""
+
+        if character.position.x <= 0:
+            character.position.x = 20
+        elif character.position.x >= WIDTH and self.stop_camera_movement:
+            character.position.x = WIDTH - 20
 
     def update(self):
         """Update function which updates every sprites,
@@ -378,10 +391,7 @@ class Game():
             self._game_over_functionality(self.scream_sound, "fell")
 
         #Don't let Joe go off the left or right side of the screen
-        if self.main_player.position.x <= 0:
-            self.main_player.position.x = 20
-        elif self.main_player.position.x >= WIDTH and self.stop_camera_movement:
-            self.main_player.position.x = WIDTH - 20
+        self._character_moving_boundaries(self.main_player)
         
         #Function for traps collision, pass in hits_platform list which has a collsion 
         #detection between the player and the platforms
@@ -467,10 +477,12 @@ class Game():
                 Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - self.grass_platform.get_size() // 2, self) #one step up platform
             elif i >= 39:
                 """The boss platforms"""
-                Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - self.grass_platform.get_size(), self)
+                boss_death_plat = Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - self.grass_platform.get_size(), self)
+                self.boss_platforms_list.append(boss_death_plat)
             else:
                 Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, self) #bottom platforms y = HEIGHT - 50
         
+
     def game_over_screen(self):
         self.main_player.velocity.x = 0
 
