@@ -249,10 +249,10 @@ def boss_level(initial_platform, game):
             last_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size() // 2, game)
         else:
             """Boss platforms"""
-            if i == 10:
+            if i == 11:
                 boss_spawn_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size(), game)
                 game.boss_platforms_list.append(boss_spawn_plat)
-                
+
             boss_death_plat = Platform(WIDTH + 50 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - initial_platform.get_size(), game)
             game.boss_platforms_list.append(boss_death_plat)
 

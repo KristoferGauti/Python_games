@@ -8,7 +8,7 @@
 """TODO: Camera system - Done
          code snow levels - Done
          Implement a death counter - Done
-         code a castle enterance with the cannon and axe cannon - Doing
+         code a castle enterance with the cannon and axe cannon - Done
          in the castle is the boss level (minotour level)
          code backgrounds and visuals (snow falling down in the snow level and more)
 """
@@ -41,7 +41,7 @@ class Game():
         self.door_collision = False 
         self.open_door = False
         self.door_opened = False
-        self.start_boss_level_list = False
+        self.start_boss_level_list = True #True for debugging otherwise False
         self.play_dead_sound = True
         self.__dirname = os.path.dirname(__file__)
         self.__sound_dir = os.path.join(self.__dirname, "sounds")
@@ -58,8 +58,9 @@ class Game():
         self.sign = pygame.sprite.Group()
         self.door = pygame.sprite.Group()
         self.switcher = pygame.sprite.Group()
+        self.boss_weapons = pygame.sprite.Group()
         self._load_data()
-        self.level_index = 12
+        self.level_index = 12 #12 for debugging
         self.death_counter = death_counter
         self.levels_list = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8, level_9, level_10, level_11, castle_level]
         self.boss_level_list = [boss_level]
@@ -109,8 +110,6 @@ class Game():
                         self.open_door = True
                         self.main_player_can_move = False
                         
-                        
-
                 if self.dead:
                     if event.key == pygame.K_RETURN:
                         main(self.death_counter)
@@ -118,8 +117,6 @@ class Game():
             if self.main_player_can_move:
                 if event.type == pygame.KEYUP:
                     self.main_player.cut_jump()
-            else:
-                pass
 
     def _draw_text(self, x, y, text, font_size, color):
         font = pygame.font.SysFont(FONT, font_size)
@@ -318,13 +315,21 @@ class Game():
         """Function that animates the open and closing 
         animation for the castle door in the castle_level"""
 
+        #run the self.boss_level_list
+        if self.start_boss_level_list:
+            self.main_player_can_move = True
+            if self.run_boss_opening_lvl_once:
+                self.opening_boss_level()
+                self.run_boss_opening_lvl_once = False
+
         if self.door_opened: #when the door animation is done then...
-            if not self.start_boss_level_list: #if this if statement oes not exist then the platforms disappear
+            if not self.start_boss_level_list: #if this if statement does not exist then the platforms disappear
                 for sprite in self.all_sprites: #remove all the sprites except for the main_player, Joe
                     if sprite._layer != MAIN_CHARACTER_LAYER:
                         sprite.kill()
 
-            if self.reset_variables_once: #reset the variables which are necessary for the boss_level_list
+            #reset the variables which are necessary for the boss_level_list
+            if self.reset_variables_once: 
                 self.level_index = -1 #self.opening_boss_level() is the level at -1 index
                 self.camera_movement_x_coordinate = CAMERA_FOCUSPOINT_X_POS
                 self.start_boss_level_list = True
@@ -336,13 +341,6 @@ class Game():
             #close the door
             if self.start_boss_level_list:
                 self.castle_door.close_door = True
-
-        #run the self.boss_level_list
-        if self.start_boss_level_list:
-            self.main_player_can_move = True
-            if self.run_boss_opening_lvl_once:
-                self.opening_boss_level()
-                self.run_boss_opening_lvl_once = False
 
     def _character_moving_boundaries(self, character):
         """This function sets the characters moving boundaries so
@@ -396,7 +394,7 @@ class Game():
         #Function for traps collision, pass in hits_platform list which has a collsion 
         #detection between the player and the platforms
         """Uncomment this line below to enable traps collision with the player"""
-        #self.game_over_collision(hits_platform)
+        self.game_over_collision(hits_platform)
 
         if not self.stop_camera_movement:
             self.move_main_player_camera() 
@@ -407,6 +405,10 @@ class Game():
 
         #This function executes when the castle door in the castle level opens
         self._castle_door_functionality()
+
+        
+        #print(self.all_sprites)
+        
 
     def draw(self):
         """Redraw window function which blits text on 

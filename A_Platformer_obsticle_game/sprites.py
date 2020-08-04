@@ -3,10 +3,12 @@ import random
 import os
 from time import sleep
 from game_settings import *
+from fire_sprites import FireBall
 
 vector = pygame.math.Vector2
 
 class SpritesheetParser():
+    """A utility class for parsing spritesheets"""
     def __init__(self, filename):
         self.spritesheet = pygame.image.load(filename).convert_alpha()
 
@@ -189,6 +191,7 @@ class Platform(pygame.sprite.Sprite):
         if concrete_platforms_qty_now < self.concrete_plat_qty:
             self.concrete_plat_blown_up = True
 
+"""Castle level sprites"""
 class CastleDoorBackground(pygame.sprite.Sprite):
     """We need this background class to display the door's background because 
     the SpritesheetParser class takes the black background from all the sprites"""
@@ -264,6 +267,7 @@ class CastleDoor(pygame.sprite.Sprite):
         if self.close_door:              
             self._animate(self.reversed_door_images_list)
 
+"""Boss level sprites"""
 class DeathSwitch(pygame.sprite.Sprite):
     def __init__(self, spawn_wall_plat, game):
         self._layer = DEATH_SWITCH_LAYER

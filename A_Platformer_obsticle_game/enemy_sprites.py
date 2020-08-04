@@ -3,7 +3,8 @@ import random
 import os
 import math
 from game_settings import *
-from sprites import Platform
+from boss_weapons import *
+#from sprites import Platform
 
 vector = pygame.math.Vector2
 
@@ -15,9 +16,15 @@ class MinotaurBoss(pygame.sprite.Sprite):
         self.game = game
         self.type = "boss"
         self.move = "stop"
+        self.run_once = True
+        self.move_left = True 
+        self.shoot_fireball = True
+        self.struck_a_lightning = True
+        self.is_jumping = False
         self.current_frame_index = 0
         self.last_update_time = 0
-        self.acceleration_x_speed = 3.1
+        self.acceleration_x_speed = 1.3
+        self.fire_ball_qty_list = []
         self._load_images()
         self.image = self.standby_img_list[0]
         self.rect = self.image.get_rect()
@@ -29,11 +36,11 @@ class MinotaurBoss(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def _load_images(self):
-        self.standby_img_list = [self.game.title_boss_sprite_sheet.get_image(769, 0, 64, 48, 2, True)]
+        self.standby_img_list = [self.game.title_boss_sprite_sheet.get_image(769, 0, 64, 48, 3, True)]
         self.walking_left_img_list = [
-            self.game.title_boss_sprite_sheet.get_image(817, 0, 64, 48, 2, True),
-            self.game.title_boss_sprite_sheet.get_image(865, 0, 64, 48, 2, True),
-            self.game.title_boss_sprite_sheet.get_image(913, 0, 64, 48, 2, True)
+            self.game.title_boss_sprite_sheet.get_image(817, 0, 64, 48, 3, True),
+            self.game.title_boss_sprite_sheet.get_image(865, 0, 64, 48, 3, True),
+            self.game.title_boss_sprite_sheet.get_image(913, 0, 64, 48, 3, True)
         ]
         self.walking_right_img_list = [pygame.transform.flip(img, True, False) for img in self.walking_left_img_list]
 
@@ -68,11 +75,13 @@ class MinotaurBoss(pygame.sprite.Sprite):
     def charge(self):
         pass
         
-    def jump(self):
-        pass
+    def jump(self, jump_power):
+        if not self.is_jumping:
+            self.velocity.y += jump_power
+            self.is_jumping = True
 
     def move_minotaur(self):
-        self.acceleration = vector(0, GRAVITY)
+        self.acceleration = vector(0, MINOTAUR_GRAVITY)
 
         if self.move == "right":
             self.acceleration.x = self.acceleration_x_speed #walk right
@@ -85,6 +94,37 @@ class MinotaurBoss(pygame.sprite.Sprite):
         self.position += self.velocity + self.acceleration
         self.rect.midbottom = self.position
 
+    def _weapon_reset(self):
+        self.shoot_fireball = True
+        self.struck_a_lightning = True
+
+    def minotaur_ai(self):
+        if self.move_left:
+            if self.position.x < self.game.main_player.position.x + 590: #if the boss is within 400 pixels 
+                self.move = "left"
+                if self.position.x < self.game.main_player.position.x + 270:
+                    self.move = "stop"
+                    if random.randrange(1, 101) % 21 == 0:
+                        self.move_left = False
+        else:
+            self.move = "right"
+            if random.randrange(1, 100) % 16 == 0: #6% chance of walking right
+                self.move_left = True
+                if random.randrange(1, 100) % 4 == 0: #25% chance of power jumping
+                    self.jump(MINOTAUR_POWER_JUMP)
+            else:
+                self._weapon_reset()
+ 
+        if self.move != "stop": #if the minotaur is moving then jump 
+            if random.randrange(1, 100) % 50 == 0: #2% chance of small jumping
+                self.jump(MINOTAUR_SMALL_JUMP)
+        else:
+            if random.randrange(1, 100) % 15 == 0: #6% chance of shooting a fireball
+                if self.shoot_fireball:
+                    fire_ball = MinotaurFireBall(self.rect.left, self.rect.centery + random.choice([10, 5, 2, 15, 12]), self.game)
+                    self.fire_ball_qty_list.append(fire_ball)
+                    self.shoot_fireball = False
+
     def update(self):
         self._animate()
         self._boss_moving_boundaries()
@@ -94,28 +134,19 @@ class MinotaurBoss(pygame.sprite.Sprite):
         if plat_hits:
             self.velocity.y = 0
             self.position.y = plat_hits[0].rect.top
+            self.is_jumping = False
+            
+        self.minotaur_ai()
+
+        #This if statement allows only 2 fireballs to be on the screen at once
+        if len(self.fire_ball_qty_list) > 2:
+            self.fire_ball_qty_list[-1].kill()
+            self.fire_ball_qty_list.clear()
         
-
-        dx, dy = self.game.main_player.rect.x - self.rect.x, self.game.main_player.rect.y - self.rect.y
-        print(dx, dy)
-
-        if dx < 0:
-            self.move = "left"
-            if self.position.x < self.game.main_player.position.x + 200: #if the boss is within 200 pixels 
-                self.move = "stop"
-        elif dx > 0:
-            self.move = "right"
-        
-        # if self.position.x < self.game.main_player.position.x + 300: #if the boss is within 400 pixels 
-        #     self.move = "left"
-        #     if int(self.game.main_player.velocity.x) < 0:
-        #         self.move = "right"
-        # else:
-        #     self.move = "stop"
-
+    
         # print("Joe pos:", self.game.main_player.position)
-        #print(self.game.main_player.velocity.x)
         # print("minotaur pos:", self.position)
+        #print(self.game.main_player.velocity.x)
         #print(self.acceleration)
 
 
@@ -134,7 +165,7 @@ class Snake(pygame.sprite.Sprite):
         self.last_update_time = 0
         self.last_update_time_attack = 0
         self.current_frame_index = 0
-        self.scale_down_num = 2
+        self.scale_down_num = 2 #if you change this number than you need to figure out the margin when the snake attacks
         self._load_images()
         self.image = self.snake_list[0]
         self.rect = self.image.get_rect()

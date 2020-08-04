@@ -1,7 +1,7 @@
 import pygame
 import random
 from game_settings import *
-from sprites import Platform
+#from sprites import Platform
 
 vector = pygame.math.Vector2
 
@@ -25,14 +25,14 @@ class FireBall(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def _load_images(self):
-        images_list = [self.game.traps_sprite_sheet.get_image(260, 1970, 124, 220, 3, False),
+        self.fireball_img_list = [self.game.traps_sprite_sheet.get_image(260, 1970, 124, 220, 3, False),
                        self.game.traps_sprite_sheet.get_image(260, 2330, 124, 220, 3, False), 
                        self.game.traps_sprite_sheet.get_image(260, 2206, 124, 220, 3, False),
                        self.game.traps_sprite_sheet.get_image(260, 1846, 124, 220, 3, False),
                        self.game.traps_sprite_sheet.get_image(260, 2566, 124, 220, 3, False)]
 
-        self.fireball_images_go_up = [pygame.transform.rotate(frame, 270) for frame in images_list]
-        self.fireball_images_go_down = [pygame.transform.rotate(frame, 90) for frame in images_list]
+        self.fireball_images_go_up = [pygame.transform.rotate(frame, 270) for frame in self.fireball_img_list]
+        self.fireball_images_go_down = [pygame.transform.rotate(frame, 90) for frame in self.fireball_img_list]
 
     def _animate(self):
         time_now = pygame.time.get_ticks()
