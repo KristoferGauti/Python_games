@@ -35,6 +35,7 @@ class Game():
         self.draw_level = True
         self.reset_camera = False
         self.dead = False
+        self.game_over = False
         self.display_key_input_instructions = False
         self.display_bigger_sign = False
         self.stop_camera_movement = False
@@ -262,6 +263,7 @@ class Game():
         trap_hit = pygame.sprite.spritecollide(self.main_player, self.traps, False, pygame.sprite.collide_mask)
         enemy_hit = pygame.sprite.spritecollide(self.main_player, self.enemies, False, pygame.sprite.collide_mask)
         bullet_hit = pygame.sprite.spritecollide(self.main_player, self.cannon_bullets, False, pygame.sprite.collide_mask)
+        boss_weapon_hit = pygame.sprite.spritecollide(self.main_player, self.boss_weapons, False, pygame.sprite.collide_mask)
 
         if lava_hits:
             self._game_over_functionality([self.ohh_sound, self.burning_sound], "was burned to death!")
@@ -277,7 +279,14 @@ class Game():
                 self._game_over_functionality(self.ohh_sound, "was hit by a boulder and died!")
             else:
                 self._game_over_functionality(self.ohh_sound, "was cut by an axe to death!")
-            
+        if boss_weapon_hit:
+            if not self.game_over: #run once boolean
+                if boss_weapon_hit[0].type == "fireball":
+                    self._game_over_functionality(self.ohh_sound, "was burned to death!")
+                if boss_weapon_hit[0].type == "lightning":
+                    self._game_over_functionality(self.ohh_sound, "was struck by a lightning to death!")
+                self.game_over = True
+                
         if enemy_hit:
             if self._check_enemy_hit(enemy_hit):
                 self.dead = True
@@ -405,9 +414,6 @@ class Game():
 
         #This function executes when the castle door in the castle level opens
         self._castle_door_functionality()
-
-        
-        #print(self.all_sprites)
         
 
     def draw(self):
@@ -488,11 +494,11 @@ class Game():
     def game_over_screen(self):
         self.main_player.velocity.x = 0
 
-        if self.game_over_text != "fell":
-            GraveStone(self.main_player.position.x - 100, self.main_player.position.y - 150, self)
-
         if self.run_once_death_counter:
             self.death_counter += 1
+            if self.game_over_text != "fell":
+                GraveStone(self.main_player.position.x - 100, self.main_player.position.y - 150, self)
+
             self.run_once_death_counter = False
 
         for trap in self.traps:

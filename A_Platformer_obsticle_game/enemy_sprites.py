@@ -24,6 +24,7 @@ class MinotaurBoss(pygame.sprite.Sprite):
         self.current_frame_index = 0
         self.last_update_time = 0
         self.acceleration_x_speed = 1.3
+        self.total_shot_firballs = 0
         self.fire_ball_qty_list = []
         self._load_images()
         self.image = self.standby_img_list[0]
@@ -71,10 +72,9 @@ class MinotaurBoss(pygame.sprite.Sprite):
             self.kill()
 
         self.game._character_moving_boundaries(self)
+        if self.rect.right > self.game.boss_platforms_list[-1].rect.right:
+            self.move = "left"
 
-    def charge(self):
-        pass
-        
     def jump(self, jump_power):
         if not self.is_jumping:
             self.velocity.y += jump_power
@@ -100,19 +100,20 @@ class MinotaurBoss(pygame.sprite.Sprite):
 
     def minotaur_ai(self):
         if self.move_left:
-            if self.position.x < self.game.main_player.position.x + 590: #if the boss is within 400 pixels 
+            if self.position.x < self.game.main_player.position.x + 590: 
                 self.move = "left"
-                if self.position.x < self.game.main_player.position.x + 270:
-                    self.move = "stop"
-                    if random.randrange(1, 101) % 21 == 0:
+                if self.position.x < self.game.main_player.position.x + 270: 
+                    self.move = "stop" #The minotaur stops when he has reached 270 pixels radius from Joe
+                    if random.randrange(1, 100) % 21 == 0: #4% chance of moving right
                         self.move_left = False
         else:
             self.move = "right"
-            if random.randrange(1, 100) % 16 == 0: #6% chance of walking right
+            if random.randrange(1, 100) % 16 == 0: #6% chance of walking left
                 self.move_left = True
                 if random.randrange(1, 100) % 4 == 0: #25% chance of power jumping
                     self.jump(MINOTAUR_POWER_JUMP)
-            else:
+
+            else: #75% chance for reloading weapons
                 self._weapon_reset()
  
         if self.move != "stop": #if the minotaur is moving then jump 
@@ -121,9 +122,17 @@ class MinotaurBoss(pygame.sprite.Sprite):
         else:
             if random.randrange(1, 100) % 15 == 0: #6% chance of shooting a fireball
                 if self.shoot_fireball:
-                    fire_ball = MinotaurFireBall(self.rect.left, self.rect.centery + random.choice([10, 5, 2, 15, 12]), self.game)
+                    random_margin = random.choice([10, 5, 2, 15, 12])
+                    fire_ball = MinotaurFireBall(self.rect.left, self.rect.centery + random_margin, self.game)
                     self.fire_ball_qty_list.append(fire_ball)
                     self.shoot_fireball = False
+                    self.total_shot_firballs += 1
+
+                    if self.total_shot_firballs % 3 == 0: #Struck a lightning when total shots of fireballs is divisible by 3
+                        if self.struck_a_lightning:
+                            random_margin = random.choice([num for num in range(5, 31, 5)])
+                            MinotaurLightning(random.randrange(self.game.boss_platforms_list[0].rect.centerx, self.rect.right - 40), HEIGHT / 5 - random_margin, self.game)
+                            self.struck_a_lightning = False
 
     def update(self):
         self._animate()
