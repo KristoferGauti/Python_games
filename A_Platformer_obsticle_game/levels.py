@@ -129,12 +129,10 @@ def level_6(initial_platform, game):
 
 
 def level_7(initial_platform, game):
-    """level 7 snow and hidden bombs"""
     for i in range(6):
         if i == 3:
             bomb_plat = Platform(WIDTH + 110 + (initial_platform.get_size() * i), 300, game)
         grass_plat = Platform(WIDTH + 110 + (initial_platform.get_size() * i), 300, game) 
-
 
     for k in range(10): #10
         if k == 2:
@@ -145,7 +143,7 @@ def level_7(initial_platform, game):
     Bomb(spawn_bomb_plat_snow, game)
     
 
-def level_8(initial_platform, game):
+def initial_snow_level(initial_platform, game):
     SingleFrameSpriteTrap(WIDTH + 500, -500, game, True, False, False, True) #An axe for level_7 (hidden snow axe)
 
     """Level 8 starts here"""
@@ -185,7 +183,7 @@ def level_9(initial_platform, game):
     for j in range(1, 5):
         Platform(last_bomb_plat.rect.x + (initial_platform.get_size() * j), last_bomb_plat.rect.y + 50, game, False, False, True)
 
-def level_10(initial_platform, game):
+def last_snow_level(initial_platform, game):
     for i in range(4):
         Platform(WIDTH - 10 + (initial_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, game)
 
@@ -264,7 +262,3 @@ def boss_level(initial_platform, game):
     GoldPile(golden_pile_plat, game)
     DeathSwitch(switch_wall_plat, game)
     MinotaurBoss(boss_spawn_plat, game)
-
-    
-
-

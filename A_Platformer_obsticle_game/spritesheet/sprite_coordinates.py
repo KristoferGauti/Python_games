@@ -138,3 +138,13 @@ main_dict = [
 {"spritename":"switch_middle.png","x":0,"y":952,"height":476,"width":399},
 {"spritename":"switch_down.png","x":0,"y":476,"height":476,"width":399},
 {"spritename":"treasures.png","x":0,"y":1428,"height":412,"width":472}]
+
+#Background and visuals
+[{"spritename":"Background.png","x":0,"y":0,"height":534,"width":924},
+{"spritename":"torch_1.png","x":0,"y":534,"height":320,"width":320},
+{"spritename":"torch_3.png","x":320,"y":534,"height":320,"width":320},
+{"spritename":"torch_2.png","x":640,"y":534,"height":320,"width":320},
+{"spritename":"torch_4.png","x":0,"y":854,"height":320,"width":320},
+{"spritename":"torch_5.png","x":320,"y":854,"height":320,"width":320},
+{"spritename":"torch_6.png","x":640,"y":854,"height":320,"width":320},
+{"spritename":"castle_background.png","x":0,"y":1174,"height":300,"width":600}]

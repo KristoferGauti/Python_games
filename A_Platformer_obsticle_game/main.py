@@ -9,8 +9,10 @@
          code snow levels - Done
          Implement a death counter - Done
          code a castle enterance with the cannon and axe cannon - Done
-         in the castle is the boss level (minotour level)
-         code backgrounds and visuals (snow falling down in the snow level and more)
+         in the castle is the boss level (minotour level) - Done
+         code backgrounds and visuals (snow falling down in the snow level and more) - Done
+         code winning screen
+         code in more sounds
 """
 
 import pygame
@@ -33,6 +35,8 @@ class Game():
         self.run_boss_opening_lvl_once = True
         self.main_player_can_move = True
         self.draw_level = True
+        self.blit_forest_background = True
+        self.blit_castle_background = True
         self.reset_camera = False
         self.dead = False
         self.game_over = False
@@ -42,7 +46,7 @@ class Game():
         self.door_collision = False 
         self.open_door = False
         self.door_opened = False
-        self.start_boss_level_list = True #True for debugging otherwise False
+        self.start_boss_level_list = False #True for debugging the castle level otherwise False
         self.play_dead_sound = True
         self.__dirname = os.path.dirname(__file__)
         self.__sound_dir = os.path.join(self.__dirname, "sounds")
@@ -61,17 +65,19 @@ class Game():
         self.switcher = pygame.sprite.Group()
         self.boss_weapons = pygame.sprite.Group()
         self._load_data()
-        self.level_index = 12 #12 for debugging
+        self.level_index = 0
         self.death_counter = death_counter
-        self.levels_list = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8, level_9, level_10, level_11, castle_level]
-        self.boss_level_list = [boss_level]
+        self.levels_list = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, initial_snow_level, level_9, last_snow_level, level_11, castle_level]
+        self.boss_level_list = [boss_level] #castle levels
         self.boss_platforms_list = []
+        self.snow_coordinates_list = [[random.randrange(0, WIDTH), random.randrange(-HEIGHT, 0)] for _ in range(200)] #200 snowflakes
   
     def _load_data(self):
         self.main_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "enemies_maincharacter_spritesheet.png"))
         self.traps_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "traps_rip_joe_spritesheet.png"))
         self.title_boss_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "title_sign_boss_spritesheet.png"))
         self.castle_switch_cannon_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "castle_final_level_spritesheet.png" ))
+        self.visuals_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "visuals_spritesheet.png"))
 
         #load sounds 
         self.scream_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "man_scream.wav"))
@@ -204,7 +210,7 @@ class Game():
         and reset the camera to its initial x coordinate"""
 
         if self.camera_movement_x_coordinate == WIDTH - 50:
-            print("Next level!")
+            #print("Next level!")
             self.main_player.position.x += 5
             self.level_index += 1
             self.reset_camera = True
@@ -215,7 +221,6 @@ class Game():
             try:
                 level_list[self.level_index](self.grass_platform, self) #self.levels_list is a list containing functions of the levels in levels.py
             except IndexError:
-                print("Index_error")
                 self.stop_camera_movement = True
 
             self.draw_level = False
@@ -301,7 +306,7 @@ class Game():
         for plat in platform_hit_list:
             if plat.snow:
                 self.main_player.jump_power = PLAYER_JUMP - 2 #let him jump higher to make it fair when jumping over axes
-                self.main_player.friction = -0.177 #Let Joe walk slower in the snow
+                self.main_player.friction = -0.15 #Let Joe walk slower in the snow
                 the_snow_spot = platform_hit_list[0].rect.top + platform_hit_list[0].get_size(False) // 2 #let Joe sink down in to the snow
             
                 if self.main_player.position.y > platform_hit_list[0].rect.top:
@@ -360,6 +365,10 @@ class Game():
         elif character.position.x >= WIDTH and self.stop_camera_movement:
             character.position.x = WIDTH - 20
 
+    def _blit_background(self, background_img_obj, list_of_levels):
+        for x in range(len(list_of_levels) + 2): #+2 because the len(boss_level_list) = 1 and the opening boss level are two levels
+            background_img_obj(WIDTH * x, 0, self)
+            
     def update(self):
         """Update function which updates every sprites,
         checks for a sprite collision and moves the camera"""
@@ -400,22 +409,29 @@ class Game():
         #Don't let Joe go off the left or right side of the screen
         self._character_moving_boundaries(self.main_player)
         
-        #Function for traps collision, pass in hits_platform list which has a collsion 
-        #detection between the player and the platforms
         """Uncomment this line below to enable traps collision with the player"""
-        self.game_over_collision(hits_platform)
+        #self.game_over_collision(hits_platform)
 
-        if not self.stop_camera_movement:
+        #Blit levels functionality
+        if not self.stop_camera_movement: #when the main_player's camera is moving
             self.move_main_player_camera() 
+
             if not self.start_boss_level_list:
+                if self.blit_forest_background:
+                    self._blit_background(ForestBackground, self.levels_list) #Blit the forest background
+                    self.blit_forest_background = False
+
                 self.change_level(self.levels_list)
             else:
+                if self.blit_castle_background:
+                    self._blit_background(CastleBackground, self.boss_level_list) #Blit the castle background
+                    self.blit_castle_background = False
+
                 self.change_level(self.boss_level_list)
 
         #This function executes when the castle door in the castle level opens
         self._castle_door_functionality()
         
-
     def draw(self):
         """Redraw window function which blits text on 
         the window again and again"""
@@ -432,22 +448,35 @@ class Game():
             self._draw_text(WIDTH / 2, 170, "Joe {}!".format(self.game_over_text), 40, WHITE)
             self._draw_text(WIDTH / 2, HEIGHT / 2, "Press \"Enter\" to play again!", 30, WHITE)
 
-        if self.display_key_input_instructions:
+        if self.display_key_input_instructions: #for the small sign
             self._draw_text(self.pixel_sign.rect.centerx, self.pixel_sign.rect.y - 25, "Press r to read", 25, WHITE)
 
-        if self.display_bigger_sign:
-            line_space = 105 #Fix later (it is not good to hard code things)
-            self._draw_text(WIDTH / 2, line_space, "Dear Joe. I was robbed by a red angry minotaur with big horns", 23, WHITE)
-            self._draw_text(WIDTH / 2, line_space + 70, "Find him and get my valuable belongins back at any cost", 23, WHITE)
-            self._draw_text(WIDTH / 2, line_space + 130, "The road is dangerous, watch out for traps", 23, WHITE)
-            self._draw_text(WIDTH / 2, line_space + 200, "He will propably send enemies which can be hostile", 23, WHITE)
-            self._draw_text(WIDTH / 2, line_space + 260, "Be cautious and use the greatest techniques to survive the wilderness", 23, WHITE)
-            self._draw_text(WIDTH / 2, line_space + 320, "Sincerely yours, Jack", 23, WHITE)
-            self._draw_text(WIDTH / 2, line_space + 360, "Press b to continue the adventure", 24, BLACK)
+        if self.display_bigger_sign: #display text for the bigger sign
+            line_space = 105
+            self._draw_text(WIDTH / 2, line_space, "Dear Joe. I was robbed by a red angry minotaur with big horns", 25, WHITE)
+            self._draw_text(WIDTH / 2, line_space + 70, "Find him and get my valuable belongins back at any cost", 25, WHITE)
+            self._draw_text(WIDTH / 2, line_space + 130, "The road is dangerous, watch out for traps", 25, WHITE)
+            self._draw_text(WIDTH / 2, line_space + 200, "He will propably send enemies which can be hostile", 25, WHITE)
+            self._draw_text(WIDTH / 2, line_space + 260, "Be cautious and use the greatest techniques to survive the wilderness", 25, WHITE)
+            self._draw_text(WIDTH / 2, line_space + 320, "Sincerely yours, Jack", 25, WHITE)
+            self._draw_text(WIDTH / 2, line_space + 360, "Press b to continue the adventure", 26, WHITE)
 
         if not self.start_boss_level_list:
             if self.door_collision and not self.open_door:
                 self._draw_text(castle_level.door.rect.centerx, castle_level.door.rect.y - 20, "Press o to open the door", 25, WHITE)    
+
+        #Make it snow in the snow levels
+        if not self.start_boss_level_list:
+            if self.level_index >= 8:
+                for coordinate in self.snow_coordinates_list:
+                    pygame.draw.circle(WIN, WHITE, coordinate, 3)
+                    coordinate[1] += 2
+
+                    if not self.level_index >= 12:
+                        if coordinate[1] > HEIGHT:
+                            new_x_pos = random.randrange(0, WIDTH)
+                            new_y_pos = random.randrange(-50, -10)
+                            coordinate[0], coordinate[1] = new_x_pos, new_y_pos
 
         pygame.display.flip()
 
@@ -465,22 +494,27 @@ class Game():
 
         self.main_player = MainCharacter(40, HEIGHT - 50, self)
         self.grass_platform = Platform(self.main_player.position.x - 40, BOTTOM_PLATFORM_Y_COORDINATE, self)
-        self.pixel_sign = Sign(WIDTH / 5, BOTTOM_PLATFORM_Y_COORDINATE - 30, 2, self)
+        self.pixel_sign = Sign(WIDTH / 5 + 80, BOTTOM_PLATFORM_Y_COORDINATE - 30, 2, self)
         GameTitle(WIDTH / 2, 100, self)
 
         for i in range(25):
             plat = Platform(self.main_player.position.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, self)
-            if i in [8, 9]:
+            if i in [9, 10]:
                 SingleFrameSpriteTrap(plat.rect.x, plat.rect.y - SPIKE_NO_ANIMATION_HEIGHT_MARGIN, self, False) #spike no animation
-            if i in [x for x in range(15, 19)]:
+            if i in [x for x in range(17, 21)]:
                 SingleFrameSpriteTrap(plat.rect.x, plat.rect.y, self)
 
     def opening_boss_level(self):
         self.main_player.position.x, self.main_player.position.y = 150, HEIGHT - 50
         self.castle_door = CastleDoor(self.main_player.position.x + 30, self.main_player.position.y + 10, self)
+        door_torch = Torch(self.castle_door.rect.right - 20, self.castle_door.rect.y - self.castle_door.image.get_height() // 4, self)
+        Torch(self.castle_door.rect.left - 90, self.castle_door.rect.y - self.castle_door.image.get_height() // 4, self)
         self.grass_platform = Platform(0, BOTTOM_PLATFORM_Y_COORDINATE, self)
 
         for i in range(1, 47):
+            if i < 20:
+                if i % 5 == 0:
+                    Torch(95 * i, door_torch.rect.y, self)
             if i == 38:
                 Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE - self.grass_platform.get_size() // 2, self) #one step up platform
             elif i >= 39:
@@ -490,7 +524,6 @@ class Game():
             else:
                 Platform(self.grass_platform.rect.x + (self.grass_platform.get_size() * i), BOTTOM_PLATFORM_Y_COORDINATE, self) #bottom platforms y = HEIGHT - 50
         
-
     def game_over_screen(self):
         self.main_player.velocity.x = 0
 

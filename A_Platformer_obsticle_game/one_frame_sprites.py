@@ -49,4 +49,21 @@ class GoldPile(pygame.sprite.Sprite):
         self.rect.centerx = spawn_plat.rect.centerx
         self.rect.bottom = spawn_plat.rect.top + 10
 
+class ForestBackground(pygame.sprite.Sprite):
+    def __init__(self, x, y, game):
+        self._layer = BGLAYER
+        self.groups = game.all_sprites
+        super().__init__(self.groups)
+        self.image = game.visuals_sprite_sheet.get_image(0, 0, 534, 924, 1)
+        self.image = pygame.transform.scale(self.image, (WIDTH, HEIGHT))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+class CastleBackground(ForestBackground):
+    def __init__(self, x, y, game):
+        ForestBackground.__init__(self, x, y, game)
+        pygame.sprite.Sprite.__init__(self.groups)
+        self.image = game.visuals_sprite_sheet.get_image(0, 1174, 300, 600, 1)
+        self.image = pygame.transform.scale(self.image, (WIDTH, HEIGHT + 170))
 

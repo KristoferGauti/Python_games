@@ -192,10 +192,7 @@ class Platform(pygame.sprite.Sprite):
             self.concrete_plat_blown_up = True
 
 """Castle level sprites"""
-class CastleDoorBackground(pygame.sprite.Sprite):
-    """We need this background class to display the door's background because 
-    the SpritesheetParser class takes the black background from all the sprites"""
-    
+class CastleDoorBackground(pygame.sprite.Sprite):    
     def __init__(self, x, y, game, door_open=True):
         self._layer = CASTLE_DOOR_LAYER - 1
         self.groups = game.all_sprites
@@ -266,6 +263,42 @@ class CastleDoor(pygame.sprite.Sprite):
                 self._animate(self.door_images_list)
         if self.close_door:              
             self._animate(self.reversed_door_images_list)
+
+class Torch(pygame.sprite.Sprite):
+    def __init__(self, x, y, game):
+        self._layer = TORCH_LAYER
+        self.groups = game.all_sprites
+        super().__init__(self.groups)
+        self.game = game
+        self._load_images()
+        self.current_frame_index = 0
+        self.last_update_time = 0
+        self.image = self.torch_img_list[0]
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def _load_images(self):
+        scale_num = 3
+        self.torch_img_list = [
+            self.game.visuals_sprite_sheet.get_image(0, 534, 320, 320, scale_num, False),
+            self.game.visuals_sprite_sheet.get_image(320, 534, 320, 320, scale_num, False),
+            self.game.visuals_sprite_sheet.get_image(640, 534, 320, 320, scale_num, False),
+            self.game.visuals_sprite_sheet.get_image(0, 854, 320, 320, scale_num, False),
+            self.game.visuals_sprite_sheet.get_image(320, 854, 320, 320, scale_num, False),
+            self.game.visuals_sprite_sheet.get_image(640, 854, 320, 320, scale_num, False)
+        ]
+
+    def _animate(self):
+        time_now = pygame.time.get_ticks()
+
+        if time_now - self.last_update_time > 50:
+            self.last_update_time = time_now
+            self.current_frame_index = (1 + self.current_frame_index) % len(self.torch_img_list)
+            self.image = self.torch_img_list[self.current_frame_index]
+
+    def update(self):
+        self._animate()
 
 """Boss level sprites"""
 class DeathSwitch(pygame.sprite.Sprite):

@@ -4,7 +4,6 @@ import os
 import math
 from game_settings import *
 from boss_weapons import *
-#from sprites import Platform
 
 vector = pygame.math.Vector2
 
@@ -151,13 +150,6 @@ class MinotaurBoss(pygame.sprite.Sprite):
         if len(self.fire_ball_qty_list) > 2:
             self.fire_ball_qty_list[-1].kill()
             self.fire_ball_qty_list.clear()
-        
-    
-        # print("Joe pos:", self.game.main_player.position)
-        # print("minotaur pos:", self.position)
-        #print(self.game.main_player.velocity.x)
-        #print(self.acceleration)
-
 
 class Snake(pygame.sprite.Sprite):
     def __init__(self, spawn_platform, game):
