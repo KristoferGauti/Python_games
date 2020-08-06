@@ -68,10 +68,12 @@ class MinotaurBoss(pygame.sprite.Sprite):
         to set moving boundaries for the minotaur boss"""
 
         if self.rect.top > HEIGHT:
+            self.game.minotaur_is_dead = True
             self.kill()
 
         self.game._character_moving_boundaries(self)
-        if self.rect.right > self.game.boss_platforms_list[-1].rect.right:
+        
+        if self.rect.right > self.game.boss_platforms_list[-1].rect.right - 10:
             self.move = "left"
 
     def jump(self, jump_power):

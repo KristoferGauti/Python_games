@@ -11,7 +11,8 @@
          code a castle enterance with the cannon and axe cannon - Done
          in the castle is the boss level (minotour level) - Done
          code backgrounds and visuals (snow falling down in the snow level and more) - Done
-         code winning screen
+         code winning screen - Done
+         code highscore functionality with a .txt file - Done
          code in more sounds
 """
 
@@ -26,6 +27,9 @@ from levels import *
 from one_frame_sprites import *
 
 class Game():
+    """To debug the castle levels set self.level_index = 12 
+    and self.start_boss_level_list = True otherwise
+    self.level_index = 12 and self.start_boss_level_list = False"""
     def __init__(self, death_counter):
         self.running = True
         self.playing = True
@@ -46,7 +50,8 @@ class Game():
         self.door_collision = False 
         self.open_door = False
         self.door_opened = False
-        self.start_boss_level_list = False #True for debugging the castle level otherwise False
+        self.minotaur_is_dead = False
+        self.start_boss_level_list = False
         self.play_dead_sound = True
         self.__dirname = os.path.dirname(__file__)
         self.__sound_dir = os.path.join(self.__dirname, "sounds")
@@ -65,7 +70,7 @@ class Game():
         self.switcher = pygame.sprite.Group()
         self.boss_weapons = pygame.sprite.Group()
         self._load_data()
-        self.level_index = 0
+        self.level_index = 0 
         self.death_counter = death_counter
         self.levels_list = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, initial_snow_level, level_9, last_snow_level, level_11, castle_level]
         self.boss_level_list = [boss_level] #castle levels
@@ -78,6 +83,13 @@ class Game():
         self.title_boss_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "title_sign_boss_spritesheet.png"))
         self.castle_switch_cannon_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "castle_final_level_spritesheet.png" ))
         self.visuals_sprite_sheet = SpritesheetParser(os.path.join(self.spritesheet_dir, "visuals_spritesheet.png"))
+
+        #Load the highscore
+        with open(os.path.join(self.__dirname, "highscore.txt"), "r") as file:
+            try:
+                self.highscore = int(file.read())
+            except:
+                self.highscore = 1000 #1000 deaths is the initial highscore
 
         #load sounds 
         self.scream_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "man_scream.wav"))
@@ -454,7 +466,7 @@ class Game():
         if self.display_bigger_sign: #display text for the bigger sign
             line_space = 105
             self._draw_text(WIDTH / 2, line_space, "Dear Joe. I was robbed by a red angry minotaur with big horns", 25, WHITE)
-            self._draw_text(WIDTH / 2, line_space + 70, "Find him and get my valuable belongins back at any cost", 25, WHITE)
+            self._draw_text(WIDTH / 2, line_space + 70, "Find him and get my precious pile of gold back at any cost", 25, WHITE)
             self._draw_text(WIDTH / 2, line_space + 130, "The road is dangerous, watch out for traps", 25, WHITE)
             self._draw_text(WIDTH / 2, line_space + 200, "He will propably send enemies which can be hostile", 25, WHITE)
             self._draw_text(WIDTH / 2, line_space + 260, "Be cautious and use the greatest techniques to survive the wilderness", 25, WHITE)
@@ -477,6 +489,23 @@ class Game():
                             new_x_pos = random.randrange(0, WIDTH)
                             new_y_pos = random.randrange(-50, -10)
                             coordinate[0], coordinate[1] = new_x_pos, new_y_pos
+
+        
+        #Display the winner text
+        if self.minotaur_is_dead:
+            self.main_player_can_move = False
+            
+            #Save the new highscore if the old one was broken
+            if self.death_counter <= self.highscore:
+                self.highscore = self.death_counter
+                self._draw_text(WIDTH / 2, 50, "NEW HIGH SCORE!!!", 40, WHITE)
+                
+                with open(os.path.join(self.__dirname, "highscore.txt"), "w") as file:
+                    file.write(str(self.death_counter))
+
+            self._draw_text(WIDTH / 2, HEIGHT / 2 - 75, "Congratulation. You won the game!", 40, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 2 - 50, "The Highscore: {} deaths".format(self.highscore), 40, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 2, "Your score: {} deaths".format(self.death_counter), 40, WHITE)
 
         pygame.display.flip()
 
