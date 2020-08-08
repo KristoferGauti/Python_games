@@ -41,6 +41,7 @@ class Game():
         self.draw_level = True
         self.blit_forest_background = True
         self.blit_castle_background = True
+        self.touched_an_object_play_sound = False
         self.reset_camera = False
         self.dead = False
         self.game_over = False
@@ -53,6 +54,7 @@ class Game():
         self.minotaur_is_dead = False
         self.start_boss_level_list = False
         self.play_dead_sound = True
+        self.play_walking_sound = True
         self.__dirname = os.path.dirname(__file__)
         self.__sound_dir = os.path.join(self.__dirname, "sounds")
         self.spritesheet_dir = os.path.join(self.__dirname, "spritesheet")
@@ -70,7 +72,7 @@ class Game():
         self.switcher = pygame.sprite.Group()
         self.boss_weapons = pygame.sprite.Group()
         self._load_data()
-        self.level_index = 0 
+        self.level_index = 0
         self.death_counter = death_counter
         self.levels_list = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, initial_snow_level, level_9, last_snow_level, level_11, castle_level]
         self.boss_level_list = [boss_level] #castle levels
@@ -95,7 +97,26 @@ class Game():
         self.scream_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "man_scream.wav"))
         self.burning_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "burning.wav"))
         self.ohh_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "classic_hurt.wav"))
+        self.walking_on_dirt_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "walking.wav"))
+        self.walking_on_snow_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "snow_walking.wav"))
+        self.lava_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "lava.wav"))
+        self.minotaur_scream_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "minotaur_scream.wav"))
+        self.minotaur_boom_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "minotaur_boom.wav"))
+        self.minotaur_initial_scream_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "minotaur_initial_scream.wav"))
+        self.bomb_boom_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "bomb.wav"))
+        self.cannon_boom_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "cannon_shot.wav"))
+        self.open_door_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "castle_door_open.wav"))
+        self.axe_hit_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "axe_hit.wav"))
+        self.boulder_roll_sound = pygame.mixer.Sound(os.path.join(self.__sound_dir, "boulder_rolling.wav"))
 
+        #set the volume
+        self.walking_on_dirt_sound.set_volume(1.0)
+        self.walking_on_snow_sound.set_volume(0.4)
+        self.lava_sound.set_volume(0.5)
+        self.minotaur_scream_sound.set_volume(0.4)
+        self.cannon_boom_sound.set_volume(0.6)
+        self.open_door_sound.set_volume(0.5)
+    
     def events(self):
         """Event handlers"""
 
@@ -144,7 +165,15 @@ class Game():
         text_rect.midtop = (x, y)
         WIN.blit(text_surface, text_rect)
 
-    def _play_sound(self, wav_file):
+    def _play_object_sound(self, wav_file):
+        if self.touched_an_object_play_sound:
+            wav_file.play()
+            self.touched_an_object = False
+        
+    def _play_dead_sound(self, wav_file):
+        """Plays the wav file. You can also pass in a list 
+        with two wav files, it plays them both"""
+
         if isinstance(wav_file, list):
             if self.play_dead_sound: #Play the sound once
                 wav_file[0].play()
@@ -264,7 +293,7 @@ class Game():
         """Sets the game over functionality and 
         calls the game over screen"""
 
-        self._play_sound(sound_when_dead)
+        self._play_dead_sound(sound_when_dead)
         self.dead = True
         self.game_over_text = gameover_text_str
         self.game_over_screen()
@@ -282,14 +311,12 @@ class Game():
         bullet_hit = pygame.sprite.spritecollide(self.main_player, self.cannon_bullets, False, pygame.sprite.collide_mask)
         boss_weapon_hit = pygame.sprite.spritecollide(self.main_player, self.boss_weapons, False, pygame.sprite.collide_mask)
 
-        if lava_hits:
+        if lava_hits or fireball_hits:
             self._game_over_functionality([self.ohh_sound, self.burning_sound], "was burned to death!")
-        if fireball_hits:
-            self._game_over_functionality([self.ohh_sound, self.burning_sound], "was fireballed to death!")
         if trap_hit:
             if self._check_trap_hit(trap_hit, hits_platform):
                 self.dead = True
-                self._play_sound(self.ohh_sound)
+                self._play_dead_sound(self.ohh_sound)
                 self.game_over_screen()
         if bullet_hit:
             if bullet_hit[0].bullet_type == "stone":
@@ -307,7 +334,7 @@ class Game():
         if enemy_hit:
             if self._check_enemy_hit(enemy_hit):
                 self.dead = True
-                self._play_sound(self.ohh_sound)
+                self._play_dead_sound(self.ohh_sound)
                 self.game_over_screen()
 
     def _which_platform_hit(self, platform_hit_list):
@@ -317,6 +344,8 @@ class Game():
 
         for plat in platform_hit_list:
             if plat.snow:
+                self.main_player.play_walking_sound(self.walking_on_snow_sound)
+
                 self.main_player.jump_power = PLAYER_JUMP - 2 #let him jump higher to make it fair when jumping over axes
                 self.main_player.friction = -0.15 #Let Joe walk slower in the snow
                 the_snow_spot = platform_hit_list[0].rect.top + platform_hit_list[0].get_size(False) // 2 #let Joe sink down in to the snow
@@ -334,6 +363,7 @@ class Game():
                     else:
                         self._adjust_player_platform_y_position(plat.rect.top)
             else: #The platform is a grass platform or castle platform
+                self.main_player.play_walking_sound(self.walking_on_dirt_sound)
                 self.main_player.friction = -0.09   
                 self._adjust_player_platform_y_position(plat.rect.top)
 
@@ -422,9 +452,9 @@ class Game():
         self._character_moving_boundaries(self.main_player)
         
         """Uncomment this line below to enable traps collision with the player"""
-        #self.game_over_collision(hits_platform)
+        self.game_over_collision(hits_platform)
 
-        #Blit levels functionality
+        #Blit levels with a background functionality
         if not self.stop_camera_movement: #when the main_player's camera is moving
             self.move_main_player_camera() 
 
@@ -443,7 +473,11 @@ class Game():
 
         #This function executes when the castle door in the castle level opens
         self._castle_door_functionality()
-        
+
+        if self.minotaur_is_dead:
+            self._play_dead_sound([self.minotaur_scream_sound, self.minotaur_boom_sound])
+            pygame.mixer.music.fadeout(5000) #fadeout the background music for 5 sec
+
     def draw(self):
         """Redraw window function which blits text on 
         the window again and again"""
@@ -455,10 +489,11 @@ class Game():
         if self.dead:
             WIN.fill(DEATHBGCOLOR)
             self.all_sprites.draw(WIN)
-            self._draw_text(WIDTH / 2, HEIGHT / 7, "Deaths: {}".format(self.death_counter), 40, WHITE)
-            self._draw_text(WIDTH / 2, 140, "Game Over!", 40, WHITE)
-            self._draw_text(WIDTH / 2, 170, "Joe {}!".format(self.game_over_text), 40, WHITE)
-            self._draw_text(WIDTH / 2, HEIGHT / 2, "Press \"Enter\" to play again!", 30, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 8, "Game Over!", 40, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 5, "Highscore deaths: {}".format(self.highscore), 40, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 4 + 20, "Deaths now: {}".format(self.death_counter), 40, DEATHBGCOLOR)
+            self._draw_text(WIDTH / 2, HEIGHT / 3 + 50, "Joe {}!".format(self.game_over_text), 40, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 3 + 100, "Press \"Enter\" to play again!", 30, WHITE)
 
         if self.display_key_input_instructions: #for the small sign
             self._draw_text(self.pixel_sign.rect.centerx, self.pixel_sign.rect.y - 25, "Press r to read", 25, WHITE)
@@ -490,7 +525,6 @@ class Game():
                             new_y_pos = random.randrange(-50, -10)
                             coordinate[0], coordinate[1] = new_x_pos, new_y_pos
 
-        
         #Display the winner text
         if self.minotaur_is_dead:
             self.main_player_can_move = False
@@ -521,6 +555,8 @@ class Game():
     def opening_level_part1(self):
         """This function blits 1/2 (part1) of the opening level in the game"""
 
+        pygame.mixer.music.load(os.path.join(self.__sound_dir, "background_forest_music.mp3")) #load the background music mp3
+        pygame.mixer.music.play(loops=-1) #play the mp3 on loop
         self.main_player = MainCharacter(40, HEIGHT - 50, self)
         self.grass_platform = Platform(self.main_player.position.x - 40, BOTTOM_PLATFORM_Y_COORDINATE, self)
         self.pixel_sign = Sign(WIDTH / 5 + 80, BOTTOM_PLATFORM_Y_COORDINATE - 30, 2, self)
@@ -534,6 +570,11 @@ class Game():
                 SingleFrameSpriteTrap(plat.rect.x, plat.rect.y, self)
 
     def opening_boss_level(self):
+        """This function blits the opening boss level"""
+
+        pygame.mixer.music.load(os.path.join(self.__sound_dir, "boss_battle.mp3"))
+        pygame.mixer.music.set_volume(0.2)
+        pygame.mixer.music.play(loops=-1) #play the mp3 on loop
         self.main_player.position.x, self.main_player.position.y = 150, HEIGHT - 50
         self.castle_door = CastleDoor(self.main_player.position.x + 30, self.main_player.position.y + 10, self)
         door_torch = Torch(self.castle_door.rect.right - 20, self.castle_door.rect.y - self.castle_door.image.get_height() // 4, self)
@@ -574,6 +615,11 @@ class Game():
             fireball.kill()
 
         self.main_player.kill()
+
+        self.walking_on_dirt_sound.stop()
+        self.walking_on_snow_sound.stop()
+        self.lava_sound.stop()
+        pygame.mixer.music.fadeout(2000)
 
 def main(death_counter):
     obsticle_game = Game(death_counter)

@@ -37,6 +37,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.walking = False
         self.jumping = False
         self.stand_left = False
+        self.play_walking_sound_once = True
         self.current_frame_index = 0
         self.last_update_time = 0
         self._load_images()
@@ -106,7 +107,16 @@ class MainCharacter(pygame.sprite.Sprite):
             self.__change_jumping_frame(self.jumping_frames_right[0], self.jumping_frames_left[0])
         elif int(self.velocity.y) > 0:
             self.__change_jumping_frame(self.jumping_frames_right[1], self.jumping_frames_left[1])
-            
+
+    def play_walking_sound(self, walking_sound):
+        if self.walking:
+            if self.play_walking_sound_once:
+                walking_sound.play() #then play the walking sound
+                self.play_walking_sound_once = False
+        else:
+            walking_sound.stop() #if Joe has stopped walking
+            self.play_walking_sound_once = True
+             
     def update(self):
         self._animate()
 
@@ -128,6 +138,13 @@ class MainCharacter(pygame.sprite.Sprite):
         self.position += self.velocity + (0.5 * self.acceleration)
         
         self.rect.midbottom = self.position
+        
+        #does not play the walking sound when Joe is in the air
+        hits = pygame.sprite.spritecollide(self, self.game.platforms, False)
+        if not hits:
+            self.game.walking_on_dirt_sound.stop() #if Joe has stopped walking
+            self.game.walking_on_snow_sound.stop()
+            self.play_walking_sound_once = True
 
     def jump(self):
         self.rect.x += 10
@@ -260,9 +277,12 @@ class CastleDoor(pygame.sprite.Sprite):
 
         if self.game.open_door:
             if not self.game.start_boss_level_list:
-                self._animate(self.door_images_list)
-        if self.close_door:              
-            self._animate(self.reversed_door_images_list)
+                self.game.touched_an_object_play_sound = True #Play the opening sound
+                self.game._play_object_sound(self.game.open_door_sound)
+                self._animate(self.door_images_list) #And animate the opening door
+        if self.close_door:        
+            self._animate(self.reversed_door_images_list) #And animate the closing door
+            
 
 class Torch(pygame.sprite.Sprite):
     def __init__(self, x, y, game):

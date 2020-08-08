@@ -93,7 +93,12 @@ class SingleFrameSpriteTrap(pygame.sprite.Sprite):
         if self.stone:
             self.rect.y += 2
             if hits:
+                if self.run_once:
+                    self.game.boulder_roll_sound.play()
+                    self.run_once = False
                 self.rect.y -= 2 #stop the ball's y position
+            else:
+                self.game.boulder_roll_sound.stop()
 
             if self.rect.x + 100 <= 0:
                 self.kill()
@@ -107,6 +112,11 @@ class SingleFrameSpriteTrap(pygame.sprite.Sprite):
                 if hits[0].snow:
                     if self.run_once:
                         self.rect.y += hits[0].get_size(False) // 2
+                        self.game.axe_hit_sound.play()
+                        self.run_once = False
+                else:
+                    if self.run_once:
+                        self.game.axe_hit_sound.play()
                         self.run_once = False
                 
                 self.image = self.stop_axe_image_list[self.random_num]
@@ -187,7 +197,10 @@ class Cannon(pygame.sprite.Sprite):
                     else: #66% chance
                         self.bullet.kill()
                         self.bullet = CannonBullet(self.cannon_head.rect.x - 40, self.cannon_head.rect.y - 20, "stone", self.game)
-                    
+            
+                self.game.touched_an_object_play_sound = True
+                self.game._play_object_sound(self.game.cannon_boom_sound)
+
 class Bomb(pygame.sprite.Sprite):
     def __init__(self, spawn_plat, game, scale_down_explosion_sprites_num=1):
         self._layer = TRAP_LAYER
@@ -246,6 +259,7 @@ class Bomb(pygame.sprite.Sprite):
                 self.blow_the_bomb = True
 
     def _animate(self):
+        """Animates the bomb's explosion"""
         self._bomb_trigger_wait()
         time_now = pygame.time.get_ticks()
         
@@ -265,13 +279,14 @@ class Bomb(pygame.sprite.Sprite):
 
             #Returns the offset coordinates (x, y) if Joe collides with the bomb otherwise None
             if self.mask_collision_using_overlap_and_offsets(self.game.main_player, self) != None:
-                if not self.game.dead:
+                if not self.game.dead: #So the game_over_text does not change when Joe is already dead
                     self.game._game_over_functionality(self.game.ohh_sound, "exploded to death")
 
-        if self.current_frame_index == len(self.blow_list) - 1:
+        if self.current_frame_index == len(self.blow_list) - 1: #remove the bomb object from game.all_sprites when done exploding
+            self.game.touched_an_object_play_sound = True
+            self.game._play_object_sound(self.game.bomb_boom_sound)
             self.kill()
-                 
-
+            
     def update(self):
         if self.mask_collision_using_overlap_and_offsets(self.game.main_player, self) != None:
             self.bomb_touched = True

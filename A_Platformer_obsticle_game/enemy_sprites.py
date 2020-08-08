@@ -19,6 +19,7 @@ class MinotaurBoss(pygame.sprite.Sprite):
         self.move_left = True 
         self.shoot_fireball = True
         self.struck_a_lightning = True
+        self.initial_scream_once = True
         self.is_jumping = False
         self.current_frame_index = 0
         self.last_update_time = 0
@@ -31,10 +32,11 @@ class MinotaurBoss(pygame.sprite.Sprite):
         self.rect.bottom = platform.rect.top
         self.rect.centerx = platform.rect.centerx 
         self.position = vector(self.rect.centerx, self.rect.bottom)
+        self.initial_x_position = self.rect.centerx
         self.acceleration = vector(0, 0)
         self.velocity = vector(0, 0)
         self.mask = pygame.mask.from_surface(self.image)
-
+        
     def _load_images(self):
         self.standby_img_list = [self.game.title_boss_sprite_sheet.get_image(769, 0, 64, 48, 3, True)]
         self.walking_left_img_list = [
@@ -152,6 +154,12 @@ class MinotaurBoss(pygame.sprite.Sprite):
         if len(self.fire_ball_qty_list) > 2:
             self.fire_ball_qty_list[-1].kill()
             self.fire_ball_qty_list.clear()
+
+        #Let the minotaur scream when joe gets on the boss_platforms
+        if str(self.position.x)[::-1].find(".") > 1: #if self.position.x has more than 1 decimal
+            if self.initial_scream_once:
+                self.game.minotaur_initial_scream_sound.play()
+                self.initial_scream_once = False
 
 class Snake(pygame.sprite.Sprite):
     def __init__(self, spawn_platform, game):

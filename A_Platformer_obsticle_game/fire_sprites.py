@@ -76,6 +76,7 @@ class Lava(pygame.sprite.Sprite):
         self.groups = game.all_sprites, game.lavas
         super().__init__(self.groups)
         self.game = game
+        self.play_lava_sound_once = True
         self.spawn_fireball = fireball
         self._load_images()
         self.last_update_time = 0
@@ -104,6 +105,15 @@ class Lava(pygame.sprite.Sprite):
         if self.spawn_fireball:
             FireBall(self.rect.x, self.rect.y - self.get_height() - 20, self.game)
             self.spawn_fireball = False
+
+        lava_list = self.game.lavas.sprites()
+        if self.game.main_player.position.x + 250 > lava_list[0].rect.x:
+            if self.play_lava_sound_once:
+                self.game.lava_sound.play()
+                self.play_lava_sound_once = False
+
+        if self.game.main_player.position.x > lava_list[-1].rect.x + 160:
+            self.game.lava_sound.fadeout(2000)
 
     def get_height(self):
         return self.image.get_height()
