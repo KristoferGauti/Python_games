@@ -451,7 +451,7 @@ class Game():
         #Don't let Joe go off the left or right side of the screen
         self._character_moving_boundaries(self.main_player)
         
-        """Uncomment this line below to enable traps collision with the player"""
+        """Uncomment this line below to enable traps collision with the player. Only for reviewing the levels"""
         self.game_over_collision(hits_platform)
 
         #Blit levels with a background functionality
