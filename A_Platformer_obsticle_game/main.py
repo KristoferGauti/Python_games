@@ -30,7 +30,8 @@ class Game():
     """To debug the castle levels set self.level_index = 12 
     and self.start_boss_level_list = True otherwise
     self.level_index = 12 and self.start_boss_level_list = False"""
-    def __init__(self, death_counter):
+    DEATH_COUNTER = 0
+    def __init__(self):
         self.running = True
         self.playing = True
         self.run_once_sign = True
@@ -73,7 +74,6 @@ class Game():
         self.boss_weapons = pygame.sprite.Group()
         self._load_data()
         self.level_index = 0
-        self.death_counter = death_counter
         self.levels_list = [opening_level_part2, level_1, level_2, level_3, level_4, level_5, level_6, level_7, initial_snow_level, level_9, last_snow_level, level_11, castle_level]
         self.boss_level_list = [boss_level] #castle levels
         self.boss_platforms_list = []
@@ -131,8 +131,6 @@ class Game():
                 if self.main_player_can_move:
                     if event.key == pygame.K_SPACE: #for jumping
                         self.main_player.jump()
-                else:
-                    pass
 
                 if event.key == pygame.K_r: #key check for reading the opening level sign
                     self.main_player.velocity.x = 0
@@ -151,8 +149,9 @@ class Game():
                         self.main_player_can_move = False
                         
                 if self.dead:
-                    if event.key == pygame.K_RETURN:
-                        main(self.death_counter)
+                    if event.key == pygame.K_SPACE:
+                        self.__init__() #set the Game to its initial state by resetting the __init__() function
+                        self.opening_level_part1()
 
             if self.main_player_can_move:
                 if event.type == pygame.KEYUP:
@@ -491,9 +490,9 @@ class Game():
             self.all_sprites.draw(WIN)
             self._draw_text(WIDTH / 2, HEIGHT / 8, "Game Over!", 40, WHITE)
             self._draw_text(WIDTH / 2, HEIGHT / 5, "Highscore deaths: {}".format(self.highscore), 40, WHITE)
-            self._draw_text(WIDTH / 2, HEIGHT / 4 + 20, "Deaths now: {}".format(self.death_counter), 40, DEATHBGCOLOR)
+            self._draw_text(WIDTH / 2, HEIGHT / 4 + 35, "Deaths now: {}".format(self.DEATH_COUNTER), 40, DEATHBGCOLOR)
             self._draw_text(WIDTH / 2, HEIGHT / 3 + 50, "Joe {}!".format(self.game_over_text), 40, WHITE)
-            self._draw_text(WIDTH / 2, HEIGHT / 3 + 100, "Press \"Enter\" to play again!", 30, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 3 + 100, "Press \"space\" to play again!", 30, WHITE)
 
         if self.display_key_input_instructions: #for the small sign
             self._draw_text(self.pixel_sign.rect.centerx, self.pixel_sign.rect.y - 25, "Press r to read", 25, WHITE)
@@ -530,16 +529,16 @@ class Game():
             self.main_player_can_move = False
             
             #Save the new highscore if the old one was broken
-            if self.death_counter <= self.highscore:
-                self.highscore = self.death_counter
+            if self.DEATH_COUNTER <= self.highscore:
+                self.highscore = self.DEATH_COUNTER
                 self._draw_text(WIDTH / 2, 50, "NEW HIGH SCORE!!!", 40, WHITE)
                 
                 with open(os.path.join(self.__dirname, "highscore.txt"), "w") as file:
-                    file.write(str(self.death_counter))
+                    file.write(str(self.DEATH_COUNTER))
 
             self._draw_text(WIDTH / 2, HEIGHT / 2 - 75, "Congratulation. You won the game!", 40, WHITE)
             self._draw_text(WIDTH / 2, HEIGHT / 2 - 50, "The Highscore: {} deaths".format(self.highscore), 40, WHITE)
-            self._draw_text(WIDTH / 2, HEIGHT / 2, "Your score: {} deaths".format(self.death_counter), 40, WHITE)
+            self._draw_text(WIDTH / 2, HEIGHT / 2, "Your score: {} deaths".format(self.DEATH_COUNTER), 40, WHITE)
 
         pygame.display.flip()
 
@@ -598,7 +597,7 @@ class Game():
         self.main_player.velocity.x = 0
 
         if self.run_once_death_counter:
-            self.death_counter += 1
+            self.DEATH_COUNTER += 1
             if self.game_over_text != "fell":
                 GraveStone(self.main_player.position.x - 100, self.main_player.position.y - 150, self)
 
@@ -621,11 +620,11 @@ class Game():
         self.lava_sound.stop()
         pygame.mixer.music.fadeout(2000)
 
-def main(death_counter):
-    obsticle_game = Game(death_counter)
+def main():
+    obsticle_game = Game()
 
     while obsticle_game.running:
         obsticle_game.opening_level_part1()
         obsticle_game.run()
 
-main(0)
+main()

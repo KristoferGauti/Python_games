@@ -20,7 +20,7 @@ class SpritesheetParser():
         if scale_up:
             image = pygame.transform.scale(image, (int(width * scale_num), int(height * scale_num)))
         else:
-            image = pygame.transform.scale(image, (width // scale_num, height // scale_num))
+            image = pygame.transform.scale(image, (int(width // scale_num), int(height // scale_num)))
 
         #Donnot fill the background color of the spritesheet surface black because set_colorkey((0, 0, 0))
         #will erase the black color from the sprite aswell as the background color 

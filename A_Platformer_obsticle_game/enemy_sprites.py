@@ -176,7 +176,7 @@ class Snake(pygame.sprite.Sprite):
         self.last_update_time = 0
         self.last_update_time_attack = 0
         self.current_frame_index = 0
-        self.scale_down_num = 2 #if you change this number than you need to figure out the margin when the snake attacks
+        self.scale_down_num = 2.3 #if you change this number than you need to figure out the margin when the snake attacks
         self._load_images()
         self.image = self.snake_list[0]
         self.rect = self.image.get_rect()
@@ -227,16 +227,16 @@ class Snake(pygame.sprite.Sprite):
                 self.image = self.snake_list[self.current_frame_index]
 
                 if not self.run_once:
-                    self.rect.centerx = old_centerx + 50 #x and y margin for the sprite because the attack frames width and
-                    self.rect.centery = old_centery + 18 #height are not the same as the width and the height on the standing snake frames
+                    self.rect.centerx = old_centerx + 45 #x and y margin for the sprite because the attack frames width and
+                    self.rect.centery = old_centery + 15 #height are not the same as the width and the height on the standing snake frames
                     self.run_once = True
             else:
                 self.current_frame_index = (self.current_frame_index + 1) % len(self.attack_list)
                 self.image = self.attack_list[self.current_frame_index]
 
                 if self.run_once:
-                    self.rect.centerx = old_centerx - 50
-                    self.rect.centery = old_centery - 18
+                    self.rect.centerx = old_centerx - 45
+                    self.rect.centery = old_centery - 15
                     self.run_once = False
         
     def update(self):
