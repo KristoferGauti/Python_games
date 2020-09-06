@@ -124,10 +124,10 @@ class MainCharacter(pygame.sprite.Sprite):
         
         keys = pygame.key.get_pressed()
         if self.game.main_player_can_move:
-            if keys[pygame.K_LEFT]:
+            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
                 self.acceleration.x = -ACCELERATION
                 self.stand_left = True
-            if keys[pygame.K_RIGHT]:
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
                 self.acceleration.x = ACCELERATION
                 self.stand_left = False
 

@@ -129,7 +129,7 @@ class Game():
                     quit()
 
                 if self.main_player_can_move:
-                    if event.key == pygame.K_SPACE: #for jumping
+                    if event.key == pygame.K_SPACE or event.key == pygame.K_w: #for jumping
                         self.main_player.jump()
 
                 if event.key == pygame.K_r: #key check for reading the opening level sign
